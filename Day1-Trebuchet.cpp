@@ -69,6 +69,7 @@ int valueOnLine(std::string line) {
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                 }
                 i+=2;
+                digitsFound++;
                 continue;
             }
 
@@ -78,6 +79,7 @@ int valueOnLine(std::string line) {
                     currWord = "two";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=2;
+                    digitsFound++;
                     continue;
                 }
                 // THREE
@@ -85,6 +87,7 @@ int valueOnLine(std::string line) {
                     currWord = "three";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=4;
+                    digitsFound++;
                     continue;
                 }
             }
@@ -95,6 +98,7 @@ int valueOnLine(std::string line) {
                     currWord = "four";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=3;
+                    digitsFound++;
                     continue;
                 }
                 // FIVE
@@ -102,6 +106,7 @@ int valueOnLine(std::string line) {
                     currWord = "five";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=3;
+                    digitsFound++;
                     continue;
                 }
             }
@@ -112,6 +117,7 @@ int valueOnLine(std::string line) {
                     currWord = "six";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=2;
+                    digitsFound++;
                     continue;
                 }
                 // SEVEN
@@ -119,6 +125,7 @@ int valueOnLine(std::string line) {
                     currWord = "seven";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=4;
+                    digitsFound++;
                     continue;
                 }
             }
@@ -129,6 +136,7 @@ int valueOnLine(std::string line) {
                     currWord = "eight";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=4;
+                    digitsFound++;
                     continue;
                 }
             }
@@ -139,6 +147,7 @@ int valueOnLine(std::string line) {
                     currWord = "nine";
                     checkIfWordInMap(words, currWord, digitsFound, num1, num2);
                     i+=3;
+                    digitsFound++;
                     continue;
                 }
             }

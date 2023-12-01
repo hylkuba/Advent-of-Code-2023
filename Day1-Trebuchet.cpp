@@ -22,21 +22,23 @@ void readLines(std::vector<std::string> &lines) {
 }
 
 void checkIfWordInMap(std::map<std::string, int> &words, std::string currWord, int &digitsFound, int &num1, int &num2) {
-    if (words.find(currWord) != words.end()) {
-        int digit = words[currWord];
-        if (digitsFound == 0) {
-            num1 = digit;
-            digitsFound++;
-        } else if (digitsFound > 0) {
-            num2 = digit;
-            digitsFound++;
-        }
+    int digit = words[currWord];
+    if (digitsFound == 0) {
+        num1 = digit;
+        digitsFound++;
+    } else if (digitsFound > 0) {
+        num2 = digit;
+        digitsFound++;
     }
 }
 
-int valueOnLine(std::string line) {
-    int num1, num2;
+std::pair<int, int> valueOnLine(std::string line) {
+    int num1digit, num2digit;
+    int num1total, num2total;
     int digitsFound = 0;
+    int digitsFoundTotal = 0;
+
+    std::pair<int, int> result;
 
     std::map<std::string, int> words = {
         {"one", 1},
@@ -50,136 +52,89 @@ int valueOnLine(std::string line) {
         {"nine", 9}
     };
 
-    std::string currWord;
+    std::set<std::string> digitWords = {
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine"
+    };
 
-    for(size_t i = 0; i < line.size(); i++) {
-        if (isdigit(line[i])) {
+
+    std::string currWord = "";
+    size_t i = 0;
+
+    while(i < line.size()) {
+        if(isdigit(line[i])) {
+            if (digitsFoundTotal == 0) {
+                num1total = line[i] - '0';
+                digitsFoundTotal++;
+            } else if (digitsFoundTotal > 0) {
+                num2total = line[i] - '0';
+                digitsFoundTotal++;
+            }
+
             if (digitsFound == 0) {
-                num1 = line[i] - '0';
+                num1digit = line[i] - '0';
                 digitsFound++;
             } else if (digitsFound > 0) {
-                num2 = line[i] - '0';
+                num2digit = line[i] - '0';
                 digitsFound++;
-            }
-        } else if (isalpha(line[i])) {
-            // ONE
-            if(line[i] == 'o') {
-                if(i + 2 < line.size() && line[i+1] == 'n' && line[i+2] == 'e') {
-                    currWord = "one";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                }
-                i+=2;
-                digitsFound++;
-                continue;
-            }
-
-            if(line[i] == 't') {
-                // TWO
-                if(i + 2 < line.size() && line[i+1] == 'w' && line[i+2] == 'o') {
-                    currWord = "two";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=2;
-                    digitsFound++;
-                    continue;
-                }
-                // THREE
-                if(i + 4 < line.size() && line[i+1] == 'h' && line[i+2] == 'r' && line[i+3] == 'e' && line[i+4] == 'e') {
-                    currWord = "three";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=4;
-                    digitsFound++;
-                    continue;
-                }
-            }
-
-            if (line[i] == 'f') {
-                // FOUR
-                if(i + 3 < line.size() && line[i+1] == 'o' && line[i+2] == 'u' && line[i+3] == 'r') {
-                    currWord = "four";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=3;
-                    digitsFound++;
-                    continue;
-                }
-                // FIVE
-                if(i + 3 < line.size() && line[i+1] == 'i' && line[i+2] == 'v' && line[i+3] == 'e') {
-                    currWord = "five";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=3;
-                    digitsFound++;
-                    continue;
-                }
-            }
-
-            if(line[i] == 's') {
-                // SIX
-                if(i + 2 < line.size() && line[i+1] == 'i' && line[i+2] == 'x') {
-                    currWord = "six";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=2;
-                    digitsFound++;
-                    continue;
-                }
-                // SEVEN
-                if(i + 4 < line.size() && line[i+1] == 'e' && line[i+2] == 'v' && line[i+3] == 'e' && line[i+4] == 'n') {
-                    currWord = "seven";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=4;
-                    digitsFound++;
-                    continue;
-                }
             }
             
-            // EIGHT
-            if(line[i] == 'e') {
-                if(i + 4 < line.size() && line[i+1] == 'i' && line[i+2] == 'g' && line[i+3] == 'h' && line[i+4] == 't') {
-                    currWord = "eight";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=4;
-                    digitsFound++;
-                    continue;
-                }
-            }
-
-            // NINE
-            if(line[i] == 'n') {
-                if(i + 3 < line.size() && line[i+1] == 'i' && line[i+2] == 'n' && line[i+3] == 'e') {
-                    currWord = "nine";
-                    checkIfWordInMap(words, currWord, digitsFound, num1, num2);
-                    i+=3;
-                    digitsFound++;
-                    continue;
-                }
+            currWord = "";
+            i++;
+            continue;
+        }
+        
+        currWord += line[i];
+        for(const std::string word : digitWords) {
+            if(currWord.find(word) != std::string::npos) {
+                checkIfWordInMap(words, word, digitsFoundTotal, num1total, num2total);
+                currWord = "";
+                i -= word.size();
+                i++;
+                break;
             }
         }
+        i++;
+    }
+
+    if(digitsFoundTotal == 1) {
+        num2total = num1total;
     }
 
     if(digitsFound == 1) {
-        num2 = num1;
+        num2digit = num1digit;
     }
 
-    //std::cout << "num1: " << num1 << " num2: " << num2 << std::endl;
-    return num1*10 + num2;
-}
+    result.first = num1digit * 10 + num2digit;
+    result.second = num1total * 10 + num2total;
 
+    return result;
+}
 
 int main(void) { 
     std::vector<std::string> lines;
     
     readLines(lines);
 
-    int sum = 0;
+    int sumDigits = 0, sumTotal = 0;
     int count = 1;
-    int val = 0;
-    for(const auto &line : lines) {
-        val = valueOnLine(line);
-        sum += val;
-        std::cout << "count: " << count++ << " Val: " << val << std::endl;
 
-        //if(count == 5) break; 
+    for(const auto &line : lines) {
+        std::pair<int, int> val = valueOnLine(line);
+        sumDigits += val.first;
+        sumTotal += val.second;
+        //std::cout << "count: " << count++ << " Val of Digits: " << val.first << " Val of all: "<< val.second << std::endl;
     }
 
-    std::cout << "Total value is: " << sum << std::endl;
+    std::cout << "Total value of digits only is: " << sumDigits << std::endl;
+    std::cout << "Total value of all is: " << sumTotal << std::endl;
 
     return 0;
 }

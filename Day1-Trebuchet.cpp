@@ -32,6 +32,16 @@ void checkIfWordInMap(std::map<std::string, int> &words, std::string currWord, i
     }
 }
 
+void digitAssign(int &digitsCnt, char val, int &num1, int &num2) {
+    if (digitsCnt == 0) {
+        num1 = val - '0';
+        digitsCnt++;
+    } else if (digitsCnt > 0) {
+        num2 = val - '0';
+        digitsCnt++;
+    }
+}
+
 std::pair<int, int> valueOnLine(std::string line) {
     int num1digit, num2digit;
     int num1total, num2total;
@@ -64,27 +74,13 @@ std::pair<int, int> valueOnLine(std::string line) {
         "nine"
     };
 
-
     std::string currWord = "";
     size_t i = 0;
 
     while(i < line.size()) {
         if(isdigit(line[i])) {
-            if (digitsFoundTotal == 0) {
-                num1total = line[i] - '0';
-                digitsFoundTotal++;
-            } else if (digitsFoundTotal > 0) {
-                num2total = line[i] - '0';
-                digitsFoundTotal++;
-            }
-
-            if (digitsFound == 0) {
-                num1digit = line[i] - '0';
-                digitsFound++;
-            } else if (digitsFound > 0) {
-                num2digit = line[i] - '0';
-                digitsFound++;
-            }
+            digitAssign(digitsFound, line[i], num1digit, num2digit);
+            digitAssign(digitsFoundTotal, line[i], num1total, num2total);
             
             currWord = "";
             i++;
@@ -120,7 +116,6 @@ std::pair<int, int> valueOnLine(std::string line) {
 
 int main(void) { 
     std::vector<std::string> lines;
-    
     readLines(lines);
 
     int sumDigits = 0, sumTotal = 0;

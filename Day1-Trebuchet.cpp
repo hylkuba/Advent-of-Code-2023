@@ -5,10 +5,10 @@
 #include <map>
 #include <set>
 
-#define URL "Day1-input.txt"
+#define FILE "Day1-input.txt"
 
 void readLines(std::vector<std::string> &lines) {
-    std::ifstream inputFile(URL);
+    std::ifstream inputFile(FILE);
     
     if (inputFile.is_open()) {
         std::string line;

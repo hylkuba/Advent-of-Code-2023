@@ -5,18 +5,18 @@
 #include <map>
 #include <set>
 
-#define URL "Day2-input.txt"
+#define FILE "Day2-input.txt"
 #define REDMAX  12
 #define GREENMAX 13
 #define BLUEMAX  14
 
 /**
- * @brief Reads file defined as URL
+ * @brief Reads file defined as FILE
  * 
  * @param lines vector of strings where all lines of file will be stored
  */
 void readFile(std::vector<std::string> &lines) {
-    std::ifstream inputFile(URL);
+    std::ifstream inputFile(FILE);
     
     if (inputFile.is_open()) {
         std::string line;

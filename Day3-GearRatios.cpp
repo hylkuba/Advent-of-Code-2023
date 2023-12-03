@@ -59,31 +59,32 @@ bool checkSymbolExistance(std::string prevLine, std::string nextLine, int startI
     return false;
 }
 
-int getPartNumbers(std::set<int> &partnumbers, std::vector<std::string> lines) {
+int getPartNumbers(std::vector<std::string> lines) {
     std::string prevLine, nextLine;
-    int startIndex, lineLength = lines[0].length(), sum = 0, vectorSize = lines.size();
+    int startIndex, lineLength = lines[0].length(), sum = 0, vectorSize = lines.size(), currTmpLen;
 
     std::string tmp;
 
     for(int lineCount = 0; lineCount < vectorSize; ++lineCount) {
         tmp = "";
+        currTmpLen = 0;
 
-        std::cout << "Cnt: " << lineCount << std::endl;
+        //std::cout << "Cnt: " << lineCount << std::endl;
 
         for (int i = 0; i < lineLength; i++) {
 
             //std::cout << "Index: " << i << " Tmp value: " << tmp << " line[i]: " << lines[lineCount][i] << std::endl;
 
-            if(!isdigit(lines[lineCount][i]) && tmp.length() == 0) {
+            if(!isdigit(lines[lineCount][i]) && currTmpLen == 0) {
                 continue;;
             } else if(isdigit(lines[lineCount][i])) {
                 tmp += lines[lineCount][i];
-            } else if(!isdigit(lines[lineCount][i]) && tmp.length() != 0) {
+                currTmpLen++;
+            } else if(!isdigit(lines[lineCount][i]) && currTmpLen != 0) {
                 // Check existance of the symbol
-                if((i - tmp.length() - 1 >= 0 && lines[lineCount][i - tmp.length() - 1] != '.') || (lines[lineCount][i] != '.')) {
-                    //partnumbers.insert(std::stoi(tmp));
+                if((i - currTmpLen - 1 >= 0 && lines[lineCount][i - currTmpLen - 1] != '.') || (lines[lineCount][i] != '.')) {
                     sum += std::stoi(tmp);
-                    std::cout << "added: " << std::stoi(tmp) << std::endl;
+                    //std::cout << "added: " << std::stoi(tmp) << std::endl;
                 } else {
                     // Assign prevLine, nextLine, startIndex, endIndex only if symbol not found on current line for efficiency
                     if(lineCount - 1 >= 0) {
@@ -98,27 +99,26 @@ int getPartNumbers(std::set<int> &partnumbers, std::vector<std::string> lines) {
                         nextLine = "";
                     }
 
-                    if(i - tmp.length() - 1 >= 0) {
-                        startIndex = i - tmp.length() - 1;
+                    if(i - currTmpLen - 1 >= 0) {
+                        startIndex = i - currTmpLen - 1;
                     } else {
-                        startIndex = -1;
+                        startIndex = 0;
                     }
 
                     if(checkSymbolExistance(prevLine, nextLine, startIndex, i)) {
-                        //partnumbers.insert(std::stoi(tmp));
                         sum += std::stoi(tmp);
-                        std::cout << "added: " << std::stoi(tmp) << std::endl;
+                        //std::cout << "added: " << std::stoi(tmp) << std::endl;
                     }
                 }
                 tmp = "";
+                currTmpLen = 0;
             }
         }
 
-        // TODO: If tmp has still value at the end of line
         if(tmp != "") {
-            if(lineLength - tmp.length() - 1 >= 0 && lines[lineCount][lineLength - tmp.length() - 1] != '.') {
-                partnumbers.insert(std::stoi(tmp));
-                std::cout << "added: " << std::stoi(tmp) << std::endl;
+            if(lineLength - currTmpLen - 1 >= 0 && lines[lineCount][lineLength - currTmpLen - 1] != '.') {
+                sum += std::stoi(tmp);
+                //std::cout << "added: " << std::stoi(tmp) << std::endl;
             } else {
                 if(lineCount - 1 >= 0) {
                     prevLine = lines[lineCount - 1];
@@ -131,15 +131,14 @@ int getPartNumbers(std::set<int> &partnumbers, std::vector<std::string> lines) {
                     nextLine = "";
                 }
 
-                if(lineLength - tmp.length() - 1 >= 0) {
-                    startIndex = lineLength - tmp.length() - 1;
+                if(lineLength - currTmpLen - 1 >= 0) {
+                    startIndex = lineLength - currTmpLen - 1;
                 } else {
-                    startIndex = -1;
+                    startIndex = 0;
                 }
                 if(checkSymbolExistance(prevLine, nextLine, startIndex, lineLength - 1)) {
-                    //partnumbers.insert(std::stoi(tmp));
                     sum += std::stoi(tmp);
-                    std::cout << "added: " << std::stoi(tmp) << std::endl;
+                    //std::cout << "added: " << std::stoi(tmp) << std::endl;
                 }
             }
         }
@@ -161,13 +160,9 @@ int main(void) {
     std::vector<std::string> lines;
     readFile(lines);
 
-    std::set<int> partNumbers;
-
-    //getPartNumbers(partNumbers, lines);
-
     //printPartNumbers(partNumbers);
 
-    std::cout << "Sum of part Numbers is: " << /*sumPartNumbers(partNumbers)*/ getPartNumbers(partNumbers, lines) << std::endl;
+    std::cout << "Sum of part Numbers is: " << /*sumPartNumbers(partNumbers)*/ getPartNumbers(lines) << std::endl;
 
     return 0;
 }

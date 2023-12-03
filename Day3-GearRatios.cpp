@@ -3,8 +3,37 @@
 #include <fstream>
 #include <vector>
 #include <set>
+#include <map>
 
 #define FILE "Day3-input.txt"
+
+struct TPos{
+    int yPos;
+    int xStartingPos;
+    int xEndingPos;
+
+    bool operator<(const TPos& other) const {
+        if (yPos != other.yPos) {
+            return yPos < other.yPos;
+        }
+        if (xStartingPos != other.xStartingPos) {
+            return xStartingPos < other.xStartingPos;
+        }
+        return xEndingPos < other.xEndingPos;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const TPos& position) {
+        os << "yPos: " << position.yPos << ", "
+        << "xStartingPos: " << position.xStartingPos << ", "
+        << "xEndingPos: " << position.xEndingPos;
+        return os;
+    }
+};
+
+void storeToMap(std::map<TPos, int> &numbers, int yPos, int xStartingPos, int xEndingPos, int value) {
+    TPos pos{yPos, xStartingPos, xEndingPos};
+    numbers[pos] = value;
+}
 
 /**
  * @brief Reads file defined as FILE
@@ -25,21 +54,25 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
-void printPartNumbers(const std::set<int> &partnumbers) {
-    int cnt = 0;
-    for(const auto &it : partnumbers) {
-        std::cout << "Part number no: " << cnt++ << " is: " << it << std::endl;
+void printPartNumbers(const std::map<TPos, int> &numbers) {
+    std::cout << "Part numbers are: " << std::endl;
+    for (const auto& pair : numbers) {
+        const TPos& key = pair.first;
+        int value = pair.second;
+        std::cout << "Key: (" << key.yPos << ", " << key.xStartingPos << ", " << key.xEndingPos << "), Value: " << value << std::endl;
+    }
+}
+
+void printAsterixPos(const std::set<std::pair<int, int>> &asterixPos) {
+    std::cout << "Asterix positions:" << std::endl;
+    for(const auto &it : asterixPos) {
+        std::cout << "(" << it.first << ", " << it.second << ")" << std::endl;
     }
 }
 
 bool checkSymbolExistance(std::string prevLine, std::string nextLine, int startIndex, int endIndex) {
-    //std::cout << "startIndex: " << startIndex << " EndIndex: " << endIndex << std::endl; 
-    
     if(prevLine != "") {
-        //std::cout << "prevLine: " << prevLine << std::endl;
         for (int i = startIndex; i <= endIndex; i++) {
-            //std::cout << "actual Line: " << prevLine[i];
-            //std::cout << std::endl;
             if(!isdigit(prevLine[i]) && prevLine[i] != '.') {
                 return true;
             }
@@ -47,10 +80,7 @@ bool checkSymbolExistance(std::string prevLine, std::string nextLine, int startI
     }
 
     if(nextLine != "") {
-        //std::cout << "nextLine: " << nextLine << std::endl;
         for (int i = startIndex; i <= endIndex; i++) {
-            //std::cout << "actual Line: " << nextLine[i];
-            //std::cout << std::endl;
             if(!isdigit(nextLine[i]) && nextLine[i] != '.') {
                 return true;
             }
@@ -59,9 +89,9 @@ bool checkSymbolExistance(std::string prevLine, std::string nextLine, int startI
     return false;
 }
 
-int getPartNumbers(std::vector<std::string> lines) {
-    std::string prevLine, nextLine;
-    int startIndex, lineLength = lines[0].length(), sum = 0, vectorSize = lines.size(), currTmpLen;
+int sumPartNumbers(std::vector<std::string> lines, std::map<TPos, int> &numbers, std::set<std::pair<int, int>> &asterixPos) {
+    std::string prevLine = "", nextLine = "";
+    int startIndex = 0, lineLength = lines[0].length(), sum = 0, vectorSize = lines.size(), currTmpLen = 0;
 
     std::string tmp;
 
@@ -69,22 +99,30 @@ int getPartNumbers(std::vector<std::string> lines) {
         tmp = "";
         currTmpLen = 0;
 
-        //std::cout << "Cnt: " << lineCount << std::endl;
-
         for (int i = 0; i < lineLength; i++) {
-
-            //std::cout << "Index: " << i << " Tmp value: " << tmp << " line[i]: " << lines[lineCount][i] << std::endl;
-
             if(!isdigit(lines[lineCount][i]) && currTmpLen == 0) {
-                continue;;
+                if(lines[lineCount][i] == '*') {
+                    asterixPos.insert(std::make_pair(i, lineCount));
+                }
+                continue;
             } else if(isdigit(lines[lineCount][i])) {
                 tmp += lines[lineCount][i];
                 currTmpLen++;
             } else if(!isdigit(lines[lineCount][i]) && currTmpLen != 0) {
+                if(lines[lineCount][i] == '*') {
+                    asterixPos.insert(std::make_pair(i, lineCount));
+                }
+                
+                if(i - currTmpLen - 1 >= 0) {
+                    startIndex = i - currTmpLen - 1;
+                } else {
+                    startIndex = 0;
+                }
                 // Check existance of the symbol
                 if((i - currTmpLen - 1 >= 0 && lines[lineCount][i - currTmpLen - 1] != '.') || (lines[lineCount][i] != '.')) {
-                    sum += std::stoi(tmp);
-                    //std::cout << "added: " << std::stoi(tmp) << std::endl;
+                    int value = std::stoi(tmp);
+                    sum += value;
+                    storeToMap(numbers, lineCount, startIndex, i, value);
                 } else {
                     // Assign prevLine, nextLine, startIndex, endIndex only if symbol not found on current line for efficiency
                     if(lineCount - 1 >= 0) {
@@ -99,15 +137,10 @@ int getPartNumbers(std::vector<std::string> lines) {
                         nextLine = "";
                     }
 
-                    if(i - currTmpLen - 1 >= 0) {
-                        startIndex = i - currTmpLen - 1;
-                    } else {
-                        startIndex = 0;
-                    }
-
                     if(checkSymbolExistance(prevLine, nextLine, startIndex, i)) {
-                        sum += std::stoi(tmp);
-                        //std::cout << "added: " << std::stoi(tmp) << std::endl;
+                        int value = std::stoi(tmp);
+                        sum += value;
+                        storeToMap(numbers, lineCount, startIndex, i, value);
                     }
                 }
                 tmp = "";
@@ -116,9 +149,16 @@ int getPartNumbers(std::vector<std::string> lines) {
         }
 
         if(tmp != "") {
+            if(lineLength - currTmpLen - 1 >= 0) {
+                startIndex = lineLength - currTmpLen - 1;
+            } else {
+                startIndex = 0;
+            }
+
             if(lineLength - currTmpLen - 1 >= 0 && lines[lineCount][lineLength - currTmpLen - 1] != '.') {
-                sum += std::stoi(tmp);
-                //std::cout << "added: " << std::stoi(tmp) << std::endl;
+                int value = std::stoi(tmp);
+                sum += value;
+                storeToMap(numbers, lineCount, startIndex, lineLength - 1, value);
             } else {
                 if(lineCount - 1 >= 0) {
                     prevLine = lines[lineCount - 1];
@@ -131,14 +171,10 @@ int getPartNumbers(std::vector<std::string> lines) {
                     nextLine = "";
                 }
 
-                if(lineLength - currTmpLen - 1 >= 0) {
-                    startIndex = lineLength - currTmpLen - 1;
-                } else {
-                    startIndex = 0;
-                }
                 if(checkSymbolExistance(prevLine, nextLine, startIndex, lineLength - 1)) {
-                    sum += std::stoi(tmp);
-                    //std::cout << "added: " << std::stoi(tmp) << std::endl;
+                    int value = std::stoi(tmp);
+                    sum += value;
+                    storeToMap(numbers, lineCount, startIndex, lineLength - 1, value);
                 }
             }
         }
@@ -146,12 +182,8 @@ int getPartNumbers(std::vector<std::string> lines) {
     return sum;
 }
 
-int sumPartNumbers(const std::set<int> &partnumbers) {
+int sumGearRatio(std::vector<std::string> lines) {
     int sum = 0;
-
-    for(const auto &it : partnumbers) {
-        sum += it;
-    }
 
     return sum;
 }
@@ -160,9 +192,18 @@ int main(void) {
     std::vector<std::string> lines;
     readFile(lines);
 
-    //printPartNumbers(partNumbers);
+    // X and Y axis
+    std::set<std::pair<int, int>> asterixPos;
 
-    std::cout << "Sum of part Numbers is: " << /*sumPartNumbers(partNumbers)*/ getPartNumbers(lines) << std::endl;
+    std::map<TPos, int> numbers;
+
+    std::cout << "Sum of part Numbers is: " << sumPartNumbers(lines, numbers, asterixPos) << std::endl;
+
+    std::cout << "Sum of gear ratios is: " << sumGearRatio(lines) << std::endl;
+
+    printPartNumbers(numbers);
+
+    //printAsterixPos(asterixPos);
 
     return 0;
 }

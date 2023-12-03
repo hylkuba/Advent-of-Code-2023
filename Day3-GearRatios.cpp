@@ -7,6 +7,10 @@
 
 #define FILE "Day3-input.txt"
 
+/**
+ * @brief Struct for use of storing information of position of specific numbers in text
+ * 
+ */
 struct TPos{
     int yPos;
     int xStartingPos;
@@ -30,6 +34,15 @@ struct TPos{
     }
 };
 
+/**
+ * @brief Stores all necessary information of number to a map
+ * 
+ * @param numbers 
+ * @param yPos 
+ * @param xStartingPos 
+ * @param xEndingPos 
+ * @param value 
+ */
 void storeToMap(std::map<TPos, int> &numbers, int yPos, int xStartingPos, int xEndingPos, int value) {
     TPos pos{yPos, xStartingPos, xEndingPos};
     numbers[pos] = value;
@@ -54,6 +67,11 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Prints all numbers that follow convention of having adjacent symbol
+ * 
+ * @param numbers 
+ */
 void printPartNumbers(const std::map<TPos, int> &numbers) {
     std::cout << "Part numbers are: " << std::endl;
     for (const auto& pair : numbers) {
@@ -63,6 +81,11 @@ void printPartNumbers(const std::map<TPos, int> &numbers) {
     }
 }
 
+/**
+ * @brief Prints all asterixes with their positions
+ * 
+ * @param asterixPos 
+ */
 void printAsterixPos(const std::set<std::pair<int, int>> &asterixPos) {
     std::cout << "Asterix positions:" << std::endl;
     for(const auto &it : asterixPos) {
@@ -70,6 +93,16 @@ void printAsterixPos(const std::set<std::pair<int, int>> &asterixPos) {
     }
 }
 
+/**
+ * @brief Checks symbol existance on adjacent positions
+ * 
+ * @param prevLine 
+ * @param nextLine 
+ * @param startIndex 
+ * @param endIndex 
+ * @return true 
+ * @return false 
+ */
 bool checkSymbolExistance(std::string prevLine, std::string nextLine, int startIndex, int endIndex) {
     if(prevLine != "") {
         for (int i = startIndex; i <= endIndex; i++) {
@@ -89,6 +122,14 @@ bool checkSymbolExistance(std::string prevLine, std::string nextLine, int startI
     return false;
 }
 
+/**
+ * @brief Sums all part numbers that have symbols on adjacent positions
+ * 
+ * @param lines 
+ * @param numbers 
+ * @param asterixPos 
+ * @return int 
+ */
 int sumPartNumbers(std::vector<std::string> lines, std::map<TPos, int> &numbers, std::set<std::pair<int, int>> &asterixPos) {
     std::string prevLine = "", nextLine = "";
     int startIndex = 0, lineLength = lines[0].length(), sum = 0, vectorSize = lines.size(), currTmpLen = 0;
@@ -182,6 +223,13 @@ int sumPartNumbers(std::vector<std::string> lines, std::map<TPos, int> &numbers,
     return sum;
 }
 
+/**
+ * @brief Sums all gears. Finds 2 numbers that share asterix on adjacent position
+ * 
+ * @param asterixPos 
+ * @param numbers 
+ * @return int 
+ */
 int sumGearRatio(std::set<std::pair<int, int>> asterixPos, std::map<TPos, int> numbers) {
     int sum = 0;
 

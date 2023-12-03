@@ -182,10 +182,36 @@ int sumPartNumbers(std::vector<std::string> lines, std::map<TPos, int> &numbers,
     return sum;
 }
 
-int sumGearRatio(std::vector<std::string> lines) {
+int sumGearRatio(std::set<std::pair<int, int>> asterixPos, std::map<TPos, int> numbers) {
     int sum = 0;
 
-    return sum;
+    for (const auto &number1 : numbers) {
+        const TPos& key1 = number1.first;
+        int val1 = number1.second;
+        for(const auto &asterix : asterixPos) {
+            if(abs(asterix.second - key1.yPos) <= 1) {
+                if(asterix.first >= key1.xStartingPos && asterix.first <= key1.xEndingPos) {
+                    for(const auto &number2 : numbers) {
+                        const TPos& key2 = number2.first;
+                        // Skip same number
+                        if(key2.yPos == key1.yPos && key2.xStartingPos == key1.xStartingPos && key2.xEndingPos == key1.xEndingPos) {
+                            continue;
+                        }
+
+                        int val2 = number2.second;
+
+                        if(abs(asterix.second - key2.yPos) <= 1) {
+                            if(asterix.first >= key2.xStartingPos && asterix.first <= key2.xEndingPos) {
+                                sum += val1 * val2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return sum / 2;
 }
 
 int main(void) {
@@ -199,9 +225,9 @@ int main(void) {
 
     std::cout << "Sum of part Numbers is: " << sumPartNumbers(lines, numbers, asterixPos) << std::endl;
 
-    std::cout << "Sum of gear ratios is: " << sumGearRatio(lines) << std::endl;
+    std::cout << "Sum of gear ratios is: " << sumGearRatio(asterixPos, numbers) << std::endl;
 
-    printPartNumbers(numbers);
+    //printPartNumbers(numbers);
 
     //printAsterixPos(asterixPos);
 

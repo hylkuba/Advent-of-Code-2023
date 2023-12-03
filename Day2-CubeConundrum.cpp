@@ -35,7 +35,7 @@ void readFile(std::vector<std::string> &lines) {
  * @param games 
  * @param lines 
  */
-void store2map(std::map<int, std::set<std::pair<int, std::string>>> &games, const std::vector<std::string> lines) {
+void store2map(std::map<int, std::set<std::pair<std::string, int>>> &games, const std::vector<std::string> lines) {
     std::string tmp = "";
     int currKey;
     for(const auto& line : lines) {
@@ -65,14 +65,14 @@ void store2map(std::map<int, std::set<std::pair<int, std::string>>> &games, cons
             }
             // If line = ';' save for the current key the pair of value and color into the set
             if(line[i] == ';' || line[i] == ',') {
-                games[currKey].insert(std::make_pair(value, tmp));
+                games[currKey].insert(std::make_pair(tmp, value));
                 tmp = "";
                 i++;
                 continue;
             }
             tmp += line[i];
         }
-        games[currKey].insert(std::make_pair(value, tmp));
+        games[currKey].insert(std::make_pair(tmp, value));
         tmp = "";
     }
 }
@@ -82,16 +82,15 @@ void store2map(std::map<int, std::set<std::pair<int, std::string>>> &games, cons
  * 
  * @param games 
  */
-void printMapValues(const std::map<int, std::set<std::pair<int, std::string>>>& games) {
+void printMapValues(const std::map<int, std::set<std::pair<std::string, int>>>& games) {
     for (const auto& entry : games) {
         int key = entry.first;
-        const std::set<std::pair<int, std::string>>& valueSet = entry.second;
 
         std::cout << "Key: " << key << ", Values: ";
-        for (const auto& pairValue : valueSet) {
-            int intValue = pairValue.first;
-            const std::string& stringValue = pairValue.second;
-            std::cout << "(" << intValue << ", " << stringValue << ") ";
+        for (const auto& pairValue : entry.second) {
+            const std::string& stringValue = pairValue.first;
+            int intValue = pairValue.second;
+            std::cout << "(" << stringValue << ", " << intValue << ") ";
         }
         std::cout << std::endl;
     }
@@ -104,10 +103,10 @@ void printMapValues(const std::map<int, std::set<std::pair<int, std::string>>>& 
  * @return true If follows criteria
  * @return false If doesn't follow criteria
  */
-bool checkPossibility(std::set<std::pair<int, std::string>> data) {
+bool checkPossibility(std::set<std::pair<std::string, int>> data) {
     for (const auto& pairValue : data) {
-        int value = pairValue.first;
-        const std::string& color = pairValue.second;
+        const std::string& color = pairValue.first;
+        int value = pairValue.second;
 
         if(color == "red" && value > REDMAX) {
             return false;
@@ -120,13 +119,57 @@ bool checkPossibility(std::set<std::pair<int, std::string>> data) {
     return true;
 }
 
-int sumIDs(const std::map<int, std::set<std::pair<int, std::string>>> games) {
+/**
+ * @brief Sums of all game IDs that are possible to play and follow rules
+ * 
+ * @param games 
+ * @return int 
+ */
+int sumIDs(const std::map<int, std::set<std::pair<std::string, int>>> games) {
     int sum = 0;
 
     for (auto it = games.begin(); it != games.end(); ++it) {
         if(checkPossibility(it->second)) {
             sum += it->first;
         }
+    }
+
+    return sum;
+}
+
+/**
+ * @brief Finds the max number for each color and returns multiplication of all of them
+ * 
+ * @param data 
+ * @return int 
+ */
+int getPower(std::set<std::pair<std::string, int>> data) {
+    int red = 0, green = 0, blue = 0;
+
+    for (const auto& pairValue : data) {
+        const std::string& color = pairValue.first;
+        if(color == "red" && pairValue.second > red) {
+            red = pairValue.second;
+        }else if(color == "green" && pairValue.second > green) {
+            green = pairValue.second;
+        }else if(color == "blue" && pairValue.second > blue) {
+            blue = pairValue.second;
+        }
+    }
+    return red * green * blue;
+}
+
+/**
+ * @brief Sums all powers of all games
+ * 
+ * @param games 
+ * @return int 
+ */
+int sumPower(const std::map<int, std::set<std::pair<std::string, int>>> games) {
+    int sum = 0;
+
+    for (auto it = games.begin(); it != games.end(); ++it) {
+        sum += getPower(it->second);
     }
 
     return sum;
@@ -140,13 +183,14 @@ int main(void) {
         !KEY = game ID
         *VALUE = pair(number of cubes, color of cubes) 
     */
-    std::map<int, std::set<std::pair<int, std::string>>> games;
+    std::map<int, std::set<std::pair<std::string, int>>> games;
 
     store2map(games, lines);
 
     //printMapValues(games);
 
     std::cout << "Sum of IDs that follow criteria is: " << sumIDs(games) << std::endl;
+    std::cout << "Sum of POWERS of sets of cubes per game is: " << sumPower(games) << std::endl;
 
     return 0;
 }

@@ -6,6 +6,9 @@
 #include <set>
 
 #define URL "Day2-input.txt"
+#define REDMAX  12
+#define GREENMAX 13
+#define BLUEMAX  14
 
 /**
  * @brief Reads file defined as URL
@@ -26,6 +29,12 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Divides lines into appropriate format and stores that information into map
+ * 
+ * @param games 
+ * @param lines 
+ */
 void store2map(std::map<int, std::set<std::pair<int, std::string>>> &games, const std::vector<std::string> lines) {
     std::string tmp = "";
     int currKey;
@@ -68,6 +77,11 @@ void store2map(std::map<int, std::set<std::pair<int, std::string>>> &games, cons
     }
 }
 
+/**
+ * @brief Prints values in map
+ * 
+ * @param games 
+ */
 void printMapValues(const std::map<int, std::set<std::pair<int, std::string>>>& games) {
     for (const auto& entry : games) {
         int key = entry.first;
@@ -82,6 +96,42 @@ void printMapValues(const std::map<int, std::set<std::pair<int, std::string>>>& 
         std::cout << std::endl;
     }
 }
+
+/**
+ * @brief Checks if set of information for current game follows the rules of maximum values
+ * 
+ * @param data 
+ * @return true If follows criteria
+ * @return false If doesn't follow criteria
+ */
+bool checkPossibility(std::set<std::pair<int, std::string>> data) {
+    for (const auto& pairValue : data) {
+        int value = pairValue.first;
+        const std::string& color = pairValue.second;
+
+        if(color == "red" && value > REDMAX) {
+            return false;
+        }else if(color == "green" && value > GREENMAX) {
+            return false;
+        }else if(color == "blue" && value > BLUEMAX) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int sumIDs(const std::map<int, std::set<std::pair<int, std::string>>> games) {
+    int sum = 0;
+
+    for (auto it = games.begin(); it != games.end(); ++it) {
+        if(checkPossibility(it->second)) {
+            sum += it->first;
+        }
+    }
+
+    return sum;
+}
+
 int main(void) {
     std::vector<std::string> lines;
     readFile(lines);
@@ -94,11 +144,9 @@ int main(void) {
 
     store2map(games, lines);
 
-    printMapValues(games);
+    //printMapValues(games);
 
-    const int REDMAX = 12;
-    const int GREENMAX = 13;
-    const int BLUEMAX = 14;
+    std::cout << "Sum of IDs that follow criteria is: " << sumIDs(games) << std::endl;
 
     return 0;
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <iomanip>
 
 #define FILE "Day4-input.txt"
 
@@ -30,7 +31,7 @@ void printMap(const std::map<int, std::set<int>>& myMap) {
     for (const auto& pair : myMap) {
         std::cout << "Key: " << pair.first << ", Values: ";
         for (const auto& value : pair.second) {
-            std::cout << value << " ";
+            std::cout << std::setw(2) << value << " ";
         }
         std::cout << std::endl;
     }
@@ -41,7 +42,6 @@ void storeData(std::vector<std::string> lines, std::map<int, std::set<int>> &win
         // skip first 5 characters (Card )
         std::string tmp = "";
         int key = 0;
-
         bool winning = true;
         for (size_t m = 5; m < lines[i].length(); m++) {
             if(isdigit(lines[i][m])) {
@@ -66,7 +66,30 @@ void storeData(std::vector<std::string> lines, std::map<int, std::set<int>> &win
                 m++;
             }
         }
+        if(tmp != "") {
+            chosenNumbers[key].insert(stoi(tmp));
+        }
     }
+}
+
+int sumNumbers(const std::map<int, std::set<int>> &winningNumbers, const std::map<int, std::set<int>> &chosenNumbers) {
+    int sum = 0;
+    for(const auto &card : winningNumbers) {
+        int key = card.first;
+        auto it = chosenNumbers.find(key);
+        int count = 0;
+        for (const auto &number : card.second) {
+            if(it->second.find(number) != it->second.end()) {
+                if(count == 0) {
+                    count = 1;
+                } else {
+                    count *= 2;
+                }
+            }
+        }
+        sum += count;
+    }
+    return sum;
 }
 
 int main(void) {
@@ -79,10 +102,12 @@ int main(void) {
 
     storeData(lines, winningNumbers, chosenNumbers);
 
-    std::cout << "Printing winning numbers:" << std::endl;
+    std::cout << "The sum is: " << sumNumbers(winningNumbers, chosenNumbers) << std::endl;
+
+    /*std::cout << "Printing winning numbers:" << std::endl;
     printMap(winningNumbers);
     std::cout << "Printing chosen numbers:" << std::endl;
-    printMap(chosenNumbers);
+    printMap(chosenNumbers);*/
 
     return 0;
 }

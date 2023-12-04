@@ -27,6 +27,11 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Prints map: key: ... Values ...
+ * 
+ * @param myMap 
+ */
 void printMap(const std::map<int, std::set<int>>& myMap) {
     for (const auto& pair : myMap) {
         std::cout << "Key: " << pair.first << ", Values: ";
@@ -37,6 +42,13 @@ void printMap(const std::map<int, std::set<int>>& myMap) {
     }
 }
 
+/**
+ * @brief Splits all lines from file and divides them to appropriate maps
+ * 
+ * @param lines 
+ * @param winningNumbers 
+ * @param chosenNumbers 
+ */
 void storeData(std::vector<std::string> lines, std::map<int, std::set<int>> &winningNumbers,
     std::map<int, std::set<int>> &chosenNumbers) {
 
@@ -74,46 +86,72 @@ void storeData(std::vector<std::string> lines, std::map<int, std::set<int>> &win
     }
 }
 
+/**
+ * @brief Return the sum of all equal numbers. At the same time stores information about original cards and their copies
+ * 
+ * @param copies 
+ * @param winningNumbers 
+ * @param chosenNumbers 
+ * @return int 
+ */
 int sumNumbers(std::map<int, int> &copies, const std::map<int, std::set<int>> &winningNumbers,
     const std::map<int, std::set<int>> &chosenNumbers) {
 
     int sum = 0;
+    int count = 0;
     for(const auto &card : winningNumbers) {
         int key = card.first;
         auto it = chosenNumbers.find(key);
-        int count = 0;
+        int val = 0;
         for (const auto &number : card.second) {
             if(it->second.find(number) != it->second.end()) {
-                if(count == 0) {
-                    count = 1;
+                if(val == 0) {
+                    val = 1;
                 } else {
-                    count *= 2;
+                    val *= 2;
+                }
+                count++;
+            }
+        }
+
+        if(val > 0) {
+            sum += val;
+            for (int i = 1; i <= count; i++) {  
+                copies[key + i]++;
+            }
+            if(copies[key] > 0) {
+                for (int i = 1; i <= count; i++) {
+                    copies[key + i] += copies[key];
                 }
             }
         }
-        if(count > 0) {
-            sum += count;
-                int m = 0;
-                /*do {
-                    for (int i = 1; i <= count; i++) {
-                        copies[i + key] += 1;
-                    }
-                    m++;
-                } while(m < copies[key]);*/
-        }
+        count = 0;
     }
 
     return sum;
 }
 
-int sumCopies(const std::map<int, int> &copies) {
+/**
+ * @brief Returns the sum of all copies + originals
+ * 
+ * @param copies 
+ * @param originalCount 
+ * @return int 
+ */
+int sumCopies(const std::map<int, int> &copies, int originalCount) {
     int sum = 0;
     for (const auto& pair : copies) {
         sum += pair.second;
     }
-    return sum;
+    return sum + originalCount;
 }
 
+/**
+ * @brief Initializes empty map with specific amount of keys
+ * 
+ * @param copies 
+ * @param count 
+ */
 void initializeCopies(std::map<int, int> &copies, int count) {
     for (int i = 1; i <= count; i++) {
         copies[i] = 0;
@@ -133,7 +171,7 @@ int main(void) {
     initializeCopies(copies, winningNumbers.size());
 
     std::cout << "The sum is: " << sumNumbers(copies, winningNumbers, chosenNumbers) << std::endl;
-    std::cout << "The sum of copies is " << sumCopies(copies) << std::endl;
+    std::cout << "The sum of copies is " << sumCopies(copies, winningNumbers.size()) << std::endl;
 
     /*std::cout << "Printing winning numbers:" << std::endl;
     printMap(winningNumbers);

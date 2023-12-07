@@ -29,15 +29,75 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
-bool compare(std::string hand1, std::string hand2) {
+bool fiveOfAKind(const std::string& hand) {
+
+}
+
+bool fourOfAKind(const std::string& hand) {
+
+}
+
+bool fullHouse(const std::string& hand) {
+
+}
+
+bool threeOfAKind(const std::string& hand) {
+
+}
+
+bool twoPair(const std::string& hand) {
+
+}
+
+bool onePair(const std::string& hand) {
+
+}
+
+bool letterComparator(const char a, const char b) {
+    const std::string order = "AKQJT98765432";
+    return order.find(a) > order.find(b);
+}
+
+// Works like operator <
+bool highCard(const std::string &hand1, const std::string &hand2) {
+    for (size_t i = 0; i < hand1.length(); i++) {
+        if(hand1[i] != hand2 [i]) {
+            return letterComparator(hand1[i], hand2[i]);
+        }
+    }
     return true;
 }
+
 struct TCard {
     std::string hand;
     size_t value;
+    bool fiveOfAKind;
+    bool fourOfAKind;
+    bool fullHouse;
+    bool threeOfAKind;
+    bool twoPair;
+    bool onePair;
 
     bool operator<(const TCard& other) const {
-        return compare(hand, other.hand);
+        if(fiveOfAKind && !other.fiveOfAKind) return false;
+        else if(!fiveOfAKind && other.fiveOfAKind) return true;
+
+        if(fourOfAKind && !other.fourOfAKind) return false;
+        else if(!fourOfAKind && other.fourOfAKind) return true;
+
+        if(fullHouse && !other.fullHouse) return false;
+        else if(!fullHouse && other.fullHouse) return true;
+
+        if(threeOfAKind && !other.threeOfAKind) return false;
+        else if(!threeOfAKind && other.threeOfAKind) return true;
+
+        if(twoPair && !other.twoPair) return false;
+        else if(!twoPair && other.twoPair) return true;
+
+        if(onePair && !other.onePair) return false;
+        else if(!onePair && other.onePair) return true;
+
+        return highCard(hand, other.hand);
     }
 
     friend std::ostream& operator<<(std::ostream& os,
@@ -56,6 +116,7 @@ void storeCards(const std::vector<std::string> &lines,
         TCard newCard;
         iss >> newCard.hand;
         iss >> newCard.value;
+        newCard.fiveOfAKind = fiveOfAKind(newCard.hand);
         cards.insert(newCard);
     }        
 }

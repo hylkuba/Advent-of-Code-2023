@@ -30,29 +30,28 @@ void readFile(std::vector<std::string> &lines) {
 
 void printMap(const std::map<std::pair<size_t, size_t>, size_t>  &myMap) {
     std::cout << "Map size: " << myMap.size() << std::endl;
-    for (const auto &entry : myMap) {
-        std::cout << "(" << entry.first.first << ", " << entry.first.second << " -> " << entry.second << std::endl;
-    }
+    /*for (const auto &entry : myMap) {
+        std::cout << "(" << entry.first.first << ", " << entry.first.second  << ")" << " -> " << entry.second << std::endl;
+    }*/
 }
 
 void loopAndStoreMap(std::map<std::pair<size_t, size_t>, size_t>  &myMap, size_t destination, size_t source, size_t range) {
 
 }
 
-bool getThreeWords(std::istringstream &iss, size_t &destination, size_t &source, size_t &range) {
+void getThreeWords(std::istringstream &iss, size_t &destination, size_t &source, size_t &range) {
     std::string tmp;
     iss >> tmp;
 
-    if(tmp == "\n") return false;
-    std::cout << "Val: " << tmp << std::endl;
+    if(tmp == "") return;
+    //std::cout << "Val: " << tmp << std::endl;
     destination = std::stoul(tmp);
     iss >> tmp;
-    std::cout << "Val: " << tmp << std::endl;
+    //std::cout << "Val: " << tmp << std::endl;
     source = std::stoul(tmp);
     iss >> tmp;
-    std::cout << "Val: " << tmp << std::endl;
+    //std::cout << "Val: " << tmp << std::endl;
     range = std::stoul(tmp);
-    return true;
 }
 
 void storeToMaps(
@@ -66,25 +65,41 @@ void storeToMaps(
     std::map<std::pair<size_t, size_t>, size_t> &temperatureToHumidity,
     std::map<std::pair<size_t, size_t>, size_t> &humidityToLocation) {
     
-    std::string category = "";
+    std::string category = "seeds:";
     size_t destination, source, range;
-    bool skipLine = false;
 
     for (const auto &line : lines) {
         std::istringstream iss(line);
-
-        if((category == "seeds" || category == "seed-to-soil" || category == "soil-to-fertilizer")
-            && !skipLine) {
-            skipLine = true;
-        } else {
-            iss >> category;
-            std::cout << "category: " << category << std::endl;
+        if(line == "seed-to-soil map:") {
+            category = "seed-to-soil";
             continue;
-        }
+        } else if(line == "soil-to-fertilizer map:") {
+            category = "soil-to-fertilizer";
+            continue;
+        } else if(line == "fertilizer-to-water map:") {
+            category = "fertilizer-to-water";
+            continue;
+        } else if(line == "water-to-light map:") {
+            category = "water-to-light";
+            continue;
+        } else if(line == "light-to-temperature map:") {
+            category = "light-to-temperature";
+            continue;
+        } else if(line == "temperature-to-humidity map:") {
+            category = "temperature-to-humidity";
+            continue;
+        } else if(line == "humidity-to-location map:") {
+            category = "humidity-to-location";
+            continue;
+        } 
 
+        //std::cout << "category: " << category << std::endl;
         if (category == "seeds:") {
+            std::string tmp;
+            iss >> tmp;
             std::string seedStr;
             while (iss >> seedStr) {
+                //std::cout << "seedStr: " << seedStr << std::endl;
                 if(seedStr != "\n") {
                     size_t seed = std::stoul(seedStr);
                     seeds.insert(seed);
@@ -94,29 +109,27 @@ void storeToMaps(
         }
 
         if (category == "seed-to-soil") {
-            // Continue to get new line as a input
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             seedToSoil[std::make_pair(source, source + range)] = destination;
         } else if (category == "soil-to-fertilizer") {
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             soilToFertilizer[std::make_pair(source, source + range)] = destination;
         } else if (category == "fertilizer-to-water") {
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             fertilizerToWater[std::make_pair(source, source + range)] = destination;
         } else if (category == "water-to-light") {
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             waterToLight[std::make_pair(source, source + range)] = destination;
         } else if (category == "light-to-temperature") {
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             lightToTemperature[std::make_pair(source, source + range)] = destination;
         } else if (category == "temperature-to-humidity") {
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             temperatureToHumidity[std::make_pair(source, source + range)] = destination;
         } else if (category == "humidity-to-location") {
-            if(!getThreeWords(iss, destination, source, range)) break;
+            getThreeWords(iss, destination, source, range);
             humidityToLocation[std::make_pair(source, source + range)] = destination;
         }
-        skipLine = false;
     }
 }
 
@@ -141,11 +154,11 @@ int main(void) {
     fertilizerToWater, waterToLight, lightToTemperature,
     temperatureToHumidity, humidityToLocation);
 
-    std::cout << "Seeds: ";
+    /*std::cout << "Seeds: ";
     for (size_t seed : seeds) {
         std::cout << seed << " ";
     }
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
     std::cout << "seedToSoil: ";
     printMap(seedToSoil);
@@ -166,7 +179,7 @@ int main(void) {
     printMap(temperatureToHumidity);
 
     std::cout << "humidityToLocation: ";
-    printMap(humidityToLocation);    
+    printMap(humidityToLocation);
 
     return 0;
 }

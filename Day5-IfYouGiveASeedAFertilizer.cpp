@@ -58,6 +58,19 @@ void getThreeWords(std::istringstream &iss, size_t &destination, size_t &source,
     range = std::stoul(tmp);
 }
 
+void obtainSeedRange(std::set<std::pair<size_t, size_t>> &seedRange, const std::set<size_t> seeds) {
+    size_t i = 0;
+    size_t start;
+    for(const auto &seed : seeds) {
+        if(i % 2 == 0) {
+            start = seed;
+        } else {
+            seedRange.insert(std::make_pair(start, start + seed - 1));
+        }
+        i++;
+    }
+}
+
 void storeToMaps(
     std::vector<std::string> &lines,
     std::set<size_t> &seeds,
@@ -139,7 +152,8 @@ int main(void) {
     std::vector<std::string> lines;
 
     std::set<size_t> seeds;
-    
+    std::set<std::pair<size_t, size_t>> seedRange;
+
     /*
         !Key is (starting pos, ending position), Value is starting position to skip to
     */
@@ -167,6 +181,20 @@ int main(void) {
         }
     }
     std::cout << "Lowest location is: " << lowest << std::endl;
+
+    obtainSeedRange(seedRange, seeds);
+    size_t lowestInrange = std::numeric_limits<size_t>::max();
+    for(const auto &pair : seedRange) {
+        for (size_t i = pair.first; i <= pair.second; i++) {
+            size_t key = keyToSkip(humidityToLocation, keyToSkip(temperatureToHumidity, keyToSkip(lightToTemperature,
+            keyToSkip(waterToLight, keyToSkip(fertilizerToWater, (keyToSkip(soilToFertilizer, keyToSkip(seedToSoil, i))))))));
+        
+            if(key < lowestInrange) {
+                lowestInrange = key;
+            }
+        }
+    }
+    std::cout << "Lowest location in range is: " << lowestInrange << std::endl;
 
     return 0;
 }

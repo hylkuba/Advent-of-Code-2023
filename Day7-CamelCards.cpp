@@ -29,6 +29,13 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+void initializeMap(std::map<char, int> &myMap) {
+    const std::string order = "AKQJT98765432";
+    for (size_t i = 0; i < order.length(); i++) {
+        myMap[order[i]] = 0;
+    }
+}
+
 bool fiveOfAKind(const std::string& hand) {
     char prev = hand[0];
     for (size_t i = 1; i < hand.length(); i++) {
@@ -39,60 +46,66 @@ bool fiveOfAKind(const std::string& hand) {
 }
 
 bool fourOfAKind(const std::string& hand) {
-    char diff = '?', prev = hand[0];
-    for (size_t i = 1; i < hand.length(); i++) {
-        if(hand[i] != prev) {
-            if(diff == '?') {
-                diff = hand[i];
-            } else return false;
+    std::map<char, int> existence;
+    initializeMap(existence);
+
+    for (size_t i = 0; i < hand.length(); i++) {
+        existence[hand[i]] += 1;
+    }
+
+    for(const auto &element : existence) {
+        if(element.second == 4) {
+            return true;
         }
     }
-    
-    return true;
+
+    return false;
 }
 
 bool fullHouse(const std::string& hand) {
-    char diff1 = '?', diff2 = '?', prev = hand[0];
-    for (size_t i = 1; i < hand.length(); i++) {
-        if(hand[i] != prev) {
-            if(diff1 == '?') {
-                diff1 = hand[i];
-            } else if(diff2 == '?') {
-                diff2 = hand[i];
-            } else return false;
+    std::map<char, int> existance;
+    initializeMap(existance);
+
+    for (size_t i = 0; i < hand.length(); i++) {
+        existance[hand[i]] += 1;
+    }
+
+    int count = 0;
+    bool two = false;
+    for(const auto &element : existance) {
+        if(element.second == 3) {
+            count++;
+        } else if(element.second == 2 && !two) {
+            count++;
+            two = true;
         }
     }
-    
-    return diff1 == diff2;
+
+    return count == 2;
 }
 
 bool threeOfAKind(const std::string& hand) {
-    char diff1 = '?', diff2 = '?', prev = hand[0];
-    for (size_t i = 1; i < hand.length(); i++) {
-        if(hand[i] != prev) {
-            if(diff1 == '?') {
-                diff1 = hand[i];
-            } else if(diff2 == '?') {
-                diff2 = hand[i];
-            } else return false;
+    std::map<char, int> existance;
+    initializeMap(existance);
+
+    for (size_t i = 0; i < hand.length(); i++) {
+        existance[hand[i]] += 1;
+    }
+
+    for(const auto &element : existance) {
+        if(element.second == 3) {
+            return true;
         }
     }
-    
-    return true;
-}
 
-void initializeMap(std::map<char, int> &myMap) {
-    const std::string order = "AKQJT98765432";
-    for (size_t i = 0; i < order.length(); i++) {
-        myMap[order[i]] = 0;
-    }
+    return false;
 }
 
 bool twoPair(const std::string& hand) {
     std::map<char, int> existance;
     initializeMap(existance);
 
-    for (size_t i = 1; i < hand.length(); i++) {
+    for (size_t i = 0; i < hand.length(); i++) {
         existance[hand[i]] += 1;
     }
 
@@ -110,7 +123,7 @@ bool onePair(const std::string& hand) {
     std::map<char, int> existance;
     initializeMap(existance);
 
-    for (size_t i = 1; i < hand.length(); i++) {
+    for (size_t i = 0; i < hand.length(); i++) {
         existance[hand[i]] += 1;
     }
 
@@ -121,7 +134,6 @@ bool onePair(const std::string& hand) {
         }
     }
 
-    std::cout << "Card: " << hand << " onePair: " << (cnt == 1) << std::endl;
     return cnt == 1;
 }
 
@@ -133,11 +145,11 @@ bool letterComparator(const char a, const char b) {
 // Works like operator <
 bool highCard(const std::string &hand1, const std::string &hand2) {
     for (size_t i = 0; i < hand1.length(); i++) {
-        if(hand1[i] != hand2 [i]) {
+        if (hand1[i] != hand2[i]) {
             return letterComparator(hand1[i], hand2[i]);
         }
     }
-    return true;
+    return false;
 }
 
 struct TCard {
@@ -180,6 +192,15 @@ struct TCard {
     }
 };
 
+void initializeCard(TCard &card) {
+    card.fiveOfAKind = false;
+    card.fourOfAKind = false;
+    card.fullHouse = false;
+    card.threeOfAKind = false;
+    card.twoPair = false;
+    card.onePair = false;
+}
+
 void storeCards(const std::vector<std::string> &lines,
     std::set<TCard> &cards) {
 
@@ -188,12 +209,20 @@ void storeCards(const std::vector<std::string> &lines,
         TCard newCard;
         iss >> newCard.hand;
         iss >> newCard.value;
-        newCard.fiveOfAKind = fiveOfAKind(newCard.hand);
-        newCard.fourOfAKind = fourOfAKind(newCard.hand);
-        newCard.fullHouse = fullHouse(newCard.hand);
-        newCard.threeOfAKind = threeOfAKind(newCard.hand);
-        newCard.twoPair = twoPair(newCard.hand);
-        newCard.onePair = onePair(newCard.hand);
+        initializeCard(newCard);
+        if(fiveOfAKind(newCard.hand)) {
+            newCard.fiveOfAKind = true;
+        } else if(fourOfAKind(newCard.hand)) {
+            newCard.fourOfAKind = true;
+        } else if(fullHouse(newCard.hand)) {
+            newCard.fullHouse = true;
+        } else if(threeOfAKind(newCard.hand)) {
+            newCard.threeOfAKind = true;
+        } else if(twoPair(newCard.hand)) {
+            newCard.twoPair = true;
+        } else if(onePair(newCard.hand)) {
+            newCard.onePair = true;
+        }
         cards.insert(newCard);
     }        
 }
@@ -215,9 +244,9 @@ int main(void) {
 
     storeCards(lines, cards);
 
-    for(const auto &card : cards) {
-        std::cout << card << std::endl;
-    }
+    /*for(const auto &card : cards) {
+        std::cout << card << "four of a kind" << card.fourOfAKind << std::endl;
+    }*/
 
     std::cout << "Sum of cards is: " << sumCards(cards) << std::endl;
 

@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <iomanip>
+#include <limits>
 
 #define FILE "Day5-input.txt"
 
@@ -30,13 +31,19 @@ void readFile(std::vector<std::string> &lines) {
 
 void printMap(const std::map<std::pair<size_t, size_t>, size_t>  &myMap) {
     std::cout << "Map size: " << myMap.size() << std::endl;
-    /*for (const auto &entry : myMap) {
+    for (const auto &entry : myMap) {
         std::cout << "(" << entry.first.first << ", " << entry.first.second  << ")" << " -> " << entry.second << std::endl;
-    }*/
+    }
 }
 
-void loopAndStoreMap(std::map<std::pair<size_t, size_t>, size_t>  &myMap, size_t destination, size_t source, size_t range) {
-
+size_t keyToSkip(const std::map<std::pair<size_t, size_t>, size_t>  &myMap, size_t key) {
+    for(const auto &value : myMap) {
+        if(key >= value.first.first && key <= value.first.second) {
+            size_t diff = key - value.first.first;
+            return value.second + diff;
+        }
+    }
+    return key;
 }
 
 void getThreeWords(std::istringstream &iss, size_t &destination, size_t &source, size_t &range) {
@@ -44,13 +51,10 @@ void getThreeWords(std::istringstream &iss, size_t &destination, size_t &source,
     iss >> tmp;
 
     if(tmp == "") return;
-    //std::cout << "Val: " << tmp << std::endl;
     destination = std::stoul(tmp);
     iss >> tmp;
-    //std::cout << "Val: " << tmp << std::endl;
     source = std::stoul(tmp);
     iss >> tmp;
-    //std::cout << "Val: " << tmp << std::endl;
     range = std::stoul(tmp);
 }
 
@@ -93,13 +97,11 @@ void storeToMaps(
             continue;
         } 
 
-        //std::cout << "category: " << category << std::endl;
         if (category == "seeds:") {
             std::string tmp;
             iss >> tmp;
             std::string seedStr;
             while (iss >> seedStr) {
-                //std::cout << "seedStr: " << seedStr << std::endl;
                 if(seedStr != "\n") {
                     size_t seed = std::stoul(seedStr);
                     seeds.insert(seed);
@@ -113,22 +115,22 @@ void storeToMaps(
             seedToSoil[std::make_pair(source, source + range)] = destination;
         } else if (category == "soil-to-fertilizer") {
             getThreeWords(iss, destination, source, range);
-            soilToFertilizer[std::make_pair(source, source + range)] = destination;
+            soilToFertilizer[std::make_pair(source, source + range - 1)] = destination;
         } else if (category == "fertilizer-to-water") {
             getThreeWords(iss, destination, source, range);
-            fertilizerToWater[std::make_pair(source, source + range)] = destination;
+            fertilizerToWater[std::make_pair(source, source + range - 1)] = destination;
         } else if (category == "water-to-light") {
             getThreeWords(iss, destination, source, range);
-            waterToLight[std::make_pair(source, source + range)] = destination;
+            waterToLight[std::make_pair(source, source + range - 1)] = destination;
         } else if (category == "light-to-temperature") {
             getThreeWords(iss, destination, source, range);
-            lightToTemperature[std::make_pair(source, source + range)] = destination;
+            lightToTemperature[std::make_pair(source, source + range - 1)] = destination;
         } else if (category == "temperature-to-humidity") {
             getThreeWords(iss, destination, source, range);
-            temperatureToHumidity[std::make_pair(source, source + range)] = destination;
+            temperatureToHumidity[std::make_pair(source, source + range - 1)] = destination;
         } else if (category == "humidity-to-location") {
             getThreeWords(iss, destination, source, range);
-            humidityToLocation[std::make_pair(source, source + range)] = destination;
+            humidityToLocation[std::make_pair(source, source + range - 1)] = destination;
         }
     }
 }
@@ -137,16 +139,17 @@ int main(void) {
     std::vector<std::string> lines;
 
     std::set<size_t> seeds;
+    
     /*
         !Key is (starting pos, ending position), Value is starting position to skip to
     */
-    std::map<std::pair<size_t, size_t>, size_t> seedToSoil;
-    std::map<std::pair<size_t, size_t>, size_t> soilToFertilizer;
-    std::map<std::pair<size_t, size_t>, size_t> fertilizerToWater;
-    std::map<std::pair<size_t, size_t>, size_t> waterToLight;
-    std::map<std::pair<size_t, size_t>, size_t> lightToTemperature;
-    std::map<std::pair<size_t, size_t>, size_t> temperatureToHumidity;
-    std::map<std::pair<size_t, size_t>, size_t> humidityToLocation;
+    std::map<std::pair<size_t, size_t>, size_t> seedToSoil
+    , soilToFertilizer
+    , fertilizerToWater
+    , waterToLight
+    , lightToTemperature
+    , temperatureToHumidity
+    , humidityToLocation;
     
     readFile(lines);
 
@@ -154,32 +157,16 @@ int main(void) {
     fertilizerToWater, waterToLight, lightToTemperature,
     temperatureToHumidity, humidityToLocation);
 
-    /*std::cout << "Seeds: ";
-    for (size_t seed : seeds) {
-        std::cout << seed << " ";
+    size_t lowest = std::numeric_limits<size_t>::max();
+    for(const auto &seed : seeds) {
+        size_t key = keyToSkip(humidityToLocation, keyToSkip(temperatureToHumidity, keyToSkip(lightToTemperature,
+            keyToSkip(waterToLight, keyToSkip(fertilizerToWater, (keyToSkip(soilToFertilizer, keyToSkip(seedToSoil, seed))))))));
+        
+        if(key < lowest) {
+            lowest = key;
+        }
     }
-    std::cout << std::endl;*/
-
-    std::cout << "seedToSoil: ";
-    printMap(seedToSoil);
-
-    std::cout << "soilToFertilizer: ";
-    printMap(soilToFertilizer);
-
-    std::cout << "fertilizerToWater: ";
-    printMap(fertilizerToWater);
-
-    std::cout << "waterToLight: ";
-    printMap(waterToLight);
-
-    std::cout << "lightToTemperature: ";
-    printMap(lightToTemperature);
-
-    std::cout << "temperatureToHumidity: ";
-    printMap(temperatureToHumidity);
-
-    std::cout << "humidityToLocation: ";
-    printMap(humidityToLocation);
+    std::cout << "Lowest location is: " << lowest << std::endl;
 
     return 0;
 }

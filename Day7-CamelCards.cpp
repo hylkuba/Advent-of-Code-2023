@@ -30,27 +30,99 @@ void readFile(std::vector<std::string> &lines) {
 }
 
 bool fiveOfAKind(const std::string& hand) {
-
+    char prev = hand[0];
+    for (size_t i = 1; i < hand.length(); i++) {
+        if(hand[i] != prev) return false;
+    }
+    
+    return true;
 }
 
 bool fourOfAKind(const std::string& hand) {
-
+    char diff = '?', prev = hand[0];
+    for (size_t i = 1; i < hand.length(); i++) {
+        if(hand[i] != prev) {
+            if(diff == '?') {
+                diff = hand[i];
+            } else return false;
+        }
+    }
+    
+    return true;
 }
 
 bool fullHouse(const std::string& hand) {
-
+    char diff1 = '?', diff2 = '?', prev = hand[0];
+    for (size_t i = 1; i < hand.length(); i++) {
+        if(hand[i] != prev) {
+            if(diff1 == '?') {
+                diff1 = hand[i];
+            } else if(diff2 == '?') {
+                diff2 = hand[i];
+            } else return false;
+        }
+    }
+    
+    return diff1 == diff2;
 }
 
 bool threeOfAKind(const std::string& hand) {
+    char diff1 = '?', diff2 = '?', prev = hand[0];
+    for (size_t i = 1; i < hand.length(); i++) {
+        if(hand[i] != prev) {
+            if(diff1 == '?') {
+                diff1 = hand[i];
+            } else if(diff2 == '?') {
+                diff2 = hand[i];
+            } else return false;
+        }
+    }
+    
+    return true;
+}
 
+void initializeMap(std::map<char, int> &myMap) {
+    const std::string order = "AKQJT98765432";
+    for (size_t i = 0; i < order.length(); i++) {
+        myMap[order[i]] = 0;
+    }
 }
 
 bool twoPair(const std::string& hand) {
+    std::map<char, int> existance;
+    initializeMap(existance);
 
+    for (size_t i = 1; i < hand.length(); i++) {
+        existance[hand[i]] += 1;
+    }
+
+    int cnt = 0;
+    for(const auto &element : existance) {
+        if(element.second == 2) {
+            cnt++;
+        }
+    }
+
+    return cnt == 2;
 }
 
 bool onePair(const std::string& hand) {
+    std::map<char, int> existance;
+    initializeMap(existance);
 
+    for (size_t i = 1; i < hand.length(); i++) {
+        existance[hand[i]] += 1;
+    }
+
+    int cnt = 0;
+    for(const auto &element : existance) {
+        if(element.second == 2) {
+            cnt++;
+        }
+    }
+
+    std::cout << "Card: " << hand << " onePair: " << (cnt == 1) << std::endl;
+    return cnt == 1;
 }
 
 bool letterComparator(const char a, const char b) {
@@ -117,8 +189,22 @@ void storeCards(const std::vector<std::string> &lines,
         iss >> newCard.hand;
         iss >> newCard.value;
         newCard.fiveOfAKind = fiveOfAKind(newCard.hand);
+        newCard.fourOfAKind = fourOfAKind(newCard.hand);
+        newCard.fullHouse = fullHouse(newCard.hand);
+        newCard.threeOfAKind = threeOfAKind(newCard.hand);
+        newCard.twoPair = twoPair(newCard.hand);
+        newCard.onePair = onePair(newCard.hand);
         cards.insert(newCard);
     }        
+}
+
+size_t sumCards(const std::set<TCard> &cards) {
+    size_t sum = 0;
+    size_t count = 1;
+    for(const auto &card : cards) {
+        sum += card.value * count++;
+    }
+    return sum;
 }
 
 int main(void) {
@@ -132,6 +218,8 @@ int main(void) {
     for(const auto &card : cards) {
         std::cout << card << std::endl;
     }
+
+    std::cout << "Sum of cards is: " << sumCards(cards) << std::endl;
 
     return 0;
 }

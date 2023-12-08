@@ -62,7 +62,7 @@ bool fourOfAKind(const std::string& hand, bool joker) {
     for(const auto &element : existence) {
         if(element.second == 4) {
             return true;
-        } else if(joker) {
+        } else if(joker && element.first != 'J') {
             if(element.second + existence['J'] == 4) return true;
         }
     }
@@ -228,11 +228,17 @@ struct TCard {
     friend std::ostream& operator<<(std::ostream& os,
         const TCard& c) {
 
-        os << "Hand: " << c.hand /*<< ", Value: " << c.value */<< " |five: " << c.fiveOfAKind << " |four: " << c.fourOfAKind
-            << " |fullHouse: " << c.fullHouse << " |three: " << c.threeOfAKind << " |2pair: " << c.twoPair << " |1pair: " << c.onePair;
+        os << "Hand: " << c.hand << ", Value: " << std::setw(3) << c.value << " | five: " << c.fiveOfAKind << " | four: " << c.fourOfAKind
+            << " | fullHouse: " << c.fullHouse << " | three: " << c.threeOfAKind << " | 2pair: " << c.twoPair << " | 1pair: " << c.onePair;
         return os;
     }
 };
+
+void printCards(std::set<TCard> &cards) {
+    for(const auto &card : cards) {
+        std::cout << card << std::endl;
+    }
+}
 
 void initializeCard(TCard &card) {
     card.fiveOfAKind = false;
@@ -313,12 +319,8 @@ int main(void) {
 
     storeCards(lines, cards, jokerCards);
 
-    /*for(const auto &card : cards) {
-        std::cout << card << std::endl;
-    }*/
-    for(const auto &card : jokerCards) {
-        std::cout << card << std::endl;
-    }
+    //printCards(cards);
+    //printCards(jokerCards);
 
     std::cout << "Sum of cards is: " << sumCards(cards) << std::endl;
     std::cout << "Sum of joker cards is: " << sumCards(jokerCards) << std::endl;

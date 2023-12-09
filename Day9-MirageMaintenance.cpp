@@ -41,13 +41,24 @@ struct TInfo {
     }
 };
 
-void printMap(const std::map<int, std::vector<TInfo>> &myMap) {
-    for(const auto &pair : myMap) {
-        std::cout << "Line: " << pair.first << std::endl;
-        for(const auto &info : pair.second) {
-            std::cout << info << ", ";
+void printSymmetricalPyramid(const std::map<int, std::vector<TInfo>> &myMap) {
+    size_t maxVectorSize = 0;
+    for (const auto &pair : myMap) {
+        maxVectorSize = std::max(maxVectorSize, pair.second.size());
+    }
+    maxVectorSize *= 8;
+
+    for (const auto &pair : myMap) {
+        size_t currSize = pair.second.size() * 8;
+        size_t leadingSpaces = (maxVectorSize - currSize) / 2;
+        for (size_t i = 0; i < leadingSpaces; ++i) {
+            std::cout << " ";
         }
-        std::cout << ")" << std::endl;
+
+        for (const auto &info : pair.second) {
+            std::cout << std::setw(8) << info;
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -76,8 +87,21 @@ int forecastedNumber(std::vector<int> &numbers) {
         differenceHistory[lineCount].push_back({prevNumber, number, number - prevNumber});
         prevNumber = number;
     }
-    printMap(differenceHistory);
-
+    
+    while(!checkZeroes(differenceHistory[lineCount])) {
+        lineCount++;
+        count = 0;
+        for(const auto &number : differenceHistory[lineCount - 1]) {
+            if(count == 0) {
+                prevNumber = number.diff;
+                count++;
+                continue;
+            }
+            differenceHistory[lineCount].push_back({prevNumber, number.diff, number.diff - prevNumber});
+            prevNumber = number.diff;
+        }
+    }
+    printSymmetricalPyramid(differenceHistory);
 
     return prediction;
 }
@@ -95,6 +119,7 @@ int calculate(std::vector<std::string> &lines) {
             numbers.push_back(stoi(word));
         }
         sum += forecastedNumber(numbers);
+        break;
     }
     return sum;
 }

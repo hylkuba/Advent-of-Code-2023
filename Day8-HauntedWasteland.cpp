@@ -96,11 +96,7 @@ size_t numOfStepsGhosts(const std::vector<char> &directions,
     getKeyByEnding(network, currKeys, ending);
 
     while(true) {
-        std::cout << "Currkeys:" << std::endl;
-        for(const auto &word : currKeys) {
-            std::cout << word << std::endl;
-        }
-        
+
         bool allEndingWithZ = true;
         for(const auto &word : currKeys) {
             if(ending.find(word) == ending.end()) {
@@ -177,14 +173,6 @@ int main(void) {
 
     std::cout << "Steps required to reach ZZZ: " << numOfSteps(directions, network) << std::endl;
     std::cout << "Steps required by Ghosts: " << numOfStepsGhosts(directions, network) << std::endl;
-
-    /*std::cout << "Printing network map:" << std::endl;
-    printMap(network);
-    
-    std::cout << "Printing vector:" << std::endl;
-    for(const auto &c : directions) {
-        std::cout << c << ", ";
-    }*/
 
     return 0;
 }

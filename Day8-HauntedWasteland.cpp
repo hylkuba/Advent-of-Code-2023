@@ -70,19 +70,78 @@ void storeData(std::vector<std::string> &lines, std::vector<char> &directions,
     }
 }
 
+void getKeyByEnding(const std::map<std::string, std::pair<std::string, std::string>> &network,
+    std::set<std::string> &starting, std::set<std::string> &ending) {
+
+    for(const auto &pair : network) {
+        std::string key = pair.first;
+        if(key.substr(2, 1) == "A") {
+            starting.insert(key);
+        } else if(key.substr(2, 1) == "Z") {
+            ending.insert(key);
+        }
+    }
+}
+
+size_t numOfStepsGhosts(const std::vector<char> &directions,
+    std::map<std::string, std::pair<std::string, std::string>> &network) {
+    
+    size_t sum = 0;
+    size_t currentIndex = 0;
+    size_t directionsSize = directions.size();
+
+    std::set<std::string> currKeys;
+    std::set<std::string> ending;
+
+    getKeyByEnding(network, currKeys, ending);
+
+    while(true) {
+        std::cout << "Currkeys:" << std::endl;
+        for(const auto &word : currKeys) {
+            std::cout << word << std::endl;
+        }
+        
+        bool allEndingWithZ = true;
+        for(const auto &word : currKeys) {
+            if(ending.find(word) == ending.end()) {
+                allEndingWithZ = false;
+                break;
+            }
+        }
+        if(allEndingWithZ) {
+            break;
+        }
+
+        std::set<std::string> prevKeys = currKeys;
+        currKeys.clear();
+
+        char currentChar = directions[currentIndex];
+
+        for(auto &word : prevKeys) {
+            if(currentChar == 'L') {
+                currKeys.insert(network[word].first);
+            } else {
+                currKeys.insert(network[word].second);
+            }
+        }
+
+        currentIndex = (currentIndex + 1) % directionsSize;
+        sum++;
+    }
+
+    return sum;
+}
+
 size_t numOfSteps(const std::vector<char> &directions,
     std::map<std::string, std::pair<std::string, std::string>> &network) {
     
-
+    size_t sum = 0;
+    size_t currentIndex = 0;
     size_t directionsSize = directions.size();
 
-    // Set a variable to keep track of the current index
-    size_t currentIndex = 0;
-    size_t sum = 0;
     std::string key = "AAA";
 
     while(true) {
-        //std::cout << "Key: " << key << std::endl;
         char currentChar = directions[currentIndex];
 
         if(key == "ZZZ") {
@@ -117,6 +176,7 @@ int main(void) {
     storeData(lines, directions, network);
 
     std::cout << "Steps required to reach ZZZ: " << numOfSteps(directions, network) << std::endl;
+    std::cout << "Steps required by Ghosts: " << numOfStepsGhosts(directions, network) << std::endl;
 
     /*std::cout << "Printing network map:" << std::endl;
     printMap(network);

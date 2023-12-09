@@ -71,12 +71,26 @@ bool checkZeroes(const std::vector<TInfo> &myVector) {
     return true;
 }
 
-int forecastedNumber(std::vector<int> &numbers) {
+std::pair<int, int> predict(std::map<int, std::vector<TInfo>> &differenceHistory, int lastNumber) {
+    int result = 0, frontResult = 0;
+    size_t mapSize = differenceHistory.size();
+
+    while(mapSize != 0) {
+        size_t vectorSize = differenceHistory[mapSize].size();
+        result += differenceHistory[mapSize][vectorSize - 1].diff;
+        //std::cout << result << "(" << mapSize << ") + ";
+        mapSize--;
+    }
+    int backResult = result + lastNumber;
+
+    return std::make_pair(frontResult, backResult);
+}
+
+std::pair<int, int> forecastedNumber(std::vector<int> &numbers) {
     // Key is line, value is vector of TInfos where each element contains information of two previous values and their difference
     std::map<int, std::vector<TInfo>> differenceHistory;
 
     size_t count = 0, lineCount = 1;
-    int prediction = 0;
     int prevNumber;
     for(const auto &number : numbers) {
         if(count == 0) {
@@ -101,27 +115,30 @@ int forecastedNumber(std::vector<int> &numbers) {
             prevNumber = number.diff;
         }
     }
-    printSymmetricalPyramid(differenceHistory);
+    //printSymmetricalPyramid(differenceHistory);
 
-    return prediction;
+    return predict(differenceHistory, numbers[numbers.size() - 1]);
 }
 
-int calculate(std::vector<std::string> &lines) {
-
-    int sum = 0;
+std::pair<int, int> calculate(std::vector<std::string> &lines) {
+    int sumBack = 0, sumFront = 0;
+    int firstNumber = 0;
     for(const auto &line : lines) {
         std::istringstream iss(line);
 
         std::vector<int> numbers;
         std::string word;
+
         while(iss >> word) {
-            //std::cout << word << std::endl;
+            if(firstNumber == 0) {
+                firstNumber = stoi(word);
+            }
             numbers.push_back(stoi(word));
         }
-        sum += forecastedNumber(numbers);
-        break;
+        sumBack += forecastedNumber(numbers).second;
+        sumFront += forecastedNumber(numbers).first;
     }
-    return sum;
+    return std::make_pair(sumFront, sumBack);
 }
 
 int main(void) {
@@ -129,7 +146,8 @@ int main(void) {
 
     readFile(lines);
 
-    std::cout << "Sum of historeis is: " << calculate(lines) << std::endl;
+    std::cout << "Sum of back is: " << calculate(lines).second << std::endl;
+    std::cout << "Sum of front is: " << calculate(lines).first << std::endl;
 
     return 0;
 }

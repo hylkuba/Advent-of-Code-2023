@@ -72,18 +72,19 @@ bool checkZeroes(const std::vector<TInfo> &myVector) {
 }
 
 std::pair<int, int> predict(std::map<int, std::vector<TInfo>> &differenceHistory, int lastNumber) {
-    int result = 0, frontResult = 0;
+    int back = 0, frontResult = 0;
     size_t mapSize = differenceHistory.size();
 
     while(mapSize != 0) {
         size_t vectorSize = differenceHistory[mapSize].size();
-        result += differenceHistory[mapSize][vectorSize - 1].diff;
+        back += differenceHistory[mapSize][vectorSize - 1].diff;
+
+        frontResult = differenceHistory[mapSize][0].diff - frontResult; 
         //std::cout << result << "(" << mapSize << ") + ";
         mapSize--;
     }
-    int backResult = result + lastNumber;
 
-    return std::make_pair(frontResult, backResult);
+    return std::make_pair(frontResult, back + lastNumber);
 }
 
 std::pair<int, int> forecastedNumber(std::vector<int> &numbers) {
@@ -128,15 +129,17 @@ std::pair<int, int> calculate(std::vector<std::string> &lines) {
 
         std::vector<int> numbers;
         std::string word;
+        int count = 0;
 
         while(iss >> word) {
-            if(firstNumber == 0) {
+            if(count == 0) {
                 firstNumber = stoi(word);
+                count++;
             }
             numbers.push_back(stoi(word));
         }
         sumBack += forecastedNumber(numbers).second;
-        sumFront += forecastedNumber(numbers).first;
+        sumFront += firstNumber - forecastedNumber(numbers).first;
     }
     return std::make_pair(sumFront, sumBack);
 }

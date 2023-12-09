@@ -64,10 +64,42 @@ void storeData(std::vector<std::string> &lines, std::vector<char> &directions,
         }
         iss >> word;
         if (0 != std::string::npos && 3 != std::string::npos) {
-            pair2 = word.substr(0, 2);
+            pair2 = word.substr(0, 3);
         }
         network[key] = std::make_pair(pair1, pair2);
     }
+}
+
+size_t numOfSteps(const std::vector<char> &directions,
+    std::map<std::string, std::pair<std::string, std::string>> &network) {
+    
+
+    size_t directionsSize = directions.size();
+
+    // Set a variable to keep track of the current index
+    size_t currentIndex = 0;
+    size_t sum = 0;
+    std::string key = "AAA";
+
+    while(true) {
+        //std::cout << "Key: " << key << std::endl;
+        char currentChar = directions[currentIndex];
+
+        if(key == "ZZZ") {
+            break;
+        }
+
+        if(currentChar == 'L') {
+            key = network[key].first;
+        } else {
+            key = network[key].second;
+        }
+
+        currentIndex = (currentIndex + 1) % directionsSize;
+        sum++;
+    }
+
+    return sum;
 }
 
 int main(void) {
@@ -83,6 +115,8 @@ int main(void) {
     readFile(lines);
 
     storeData(lines, directions, network);
+
+    std::cout << "Steps required to reach ZZZ: " << numOfSteps(directions, network) << std::endl;
 
     /*std::cout << "Printing network map:" << std::endl;
     printMap(network);

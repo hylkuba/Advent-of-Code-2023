@@ -146,17 +146,19 @@ size_t getSteps(std::map<std::pair<size_t, size_t>, char> &maze, std::pair<size_
     std::pair<size_t, size_t> prevPos = sPos;
 
     steps++;
+    //std::cout << "Spos: " << sPos.first << ", " << sPos.second << std::endl;
 
+    //TODO Problem with prevPos
     while(true) {
+        //std::cout << "Prev: " << prevPos.first << ", " << prevPos.second << " currPos: " << currPos.first << ", " << currPos.second  << std::endl;
         if(currPos == sPos) {
             break;
         }
-        if(steps != 1) {
-            prevPos = currPos;
-        }
+        std::pair<size_t, size_t> tmp = currPos;
         currPos = move(maze, currPos, edge, prevPos);
+        prevPos = tmp;
         steps++;
-        std::cout << "steps: " << steps << std::endl;
+        //std::cout << "Loop: " << steps << " currPos: " << currPos.first << ", " << currPos.second  << std::endl;
     }
     //std::cout << "next symbol: " << currPos.first << ", " << currPos.second << " | " << maze[currPos] << std::endl;
 

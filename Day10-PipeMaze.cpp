@@ -55,6 +55,44 @@ void printMap(const std::map<std::pair<size_t, size_t>, char> &maze) {
     }
 }
 
+void printLoop(std::map<std::pair<size_t, size_t>, bool> &loop, size_t size) {
+    for (size_t i = 1; i <= size; i++) {
+        for (size_t m = 1; m <= size; m++) {
+            if(loop[std::make_pair(m, i)]) {
+                std::cout << "#";
+            } else {
+                std::cout << " ";
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
+void printLoopWithSpaces(std::map<std::pair<size_t, size_t>, char> &loop,
+    std::set<std::pair<size_t, size_t>> &found, size_t size) {
+    
+    for (size_t i = 1; i <= size; i++) {
+        for (size_t m = 1; m <= size; m++) {
+            if(loop[std::make_pair(m, i)] != ' ') {
+                std::cout << loop[std::make_pair(m, i)];
+            } else if(found.find(std::make_pair(m, i)) != found.end()){
+                std::cout << "\033[31m#\033[0m";
+            } else {
+                std::cout << " ";
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
+void initializeLoop(std::map<std::pair<size_t, size_t>, char> &loop, size_t size) {
+    for (size_t i = 1; i <= size; i++) {
+        for (size_t m = 1; m <= size; m++) {
+            loop[std::make_pair(m, i)] = ' ';
+        }
+    }
+}
+
 size_t storeMaze(const std::vector<std::string> &lines, std::map<std::pair<size_t, size_t>, char> &maze, std::pair<size_t, size_t> &sPos) {
     size_t y = 1;
     for(const auto &line : lines) {
@@ -140,29 +178,56 @@ std::pair<size_t, size_t> move(std::map<std::pair<size_t, size_t>, char> &maze,
     return nextPos;
 }
 
-size_t getSteps(std::map<std::pair<size_t, size_t>, char> &maze, std::pair<size_t, size_t> &sPos, size_t &edge) {
+size_t getSteps(std::map<std::pair<size_t, size_t>, char> &maze, std::pair<size_t, size_t> &sPos,
+    size_t &edge, std::map<std::pair<size_t, size_t>, char> &loop) {
+
     size_t steps = 0;
     std::pair<size_t, size_t> currPos = start(maze, sPos, edge);
     std::pair<size_t, size_t> prevPos = sPos;
+    loop[sPos] = true;
 
     steps++;
-    //std::cout << "Spos: " << sPos.first << ", " << sPos.second << std::endl;
 
-    //TODO Problem with prevPos
     while(true) {
-        //std::cout << "Prev: " << prevPos.first << ", " << prevPos.second << " currPos: " << currPos.first << ", " << currPos.second  << std::endl;
         if(currPos == sPos) {
             break;
         }
         std::pair<size_t, size_t> tmp = currPos;
         currPos = move(maze, currPos, edge, prevPos);
+        loop[currPos] = maze[currPos];
         prevPos = tmp;
         steps++;
-        //std::cout << "Loop: " << steps << " currPos: " << currPos.first << ", " << currPos.second  << std::endl;
     }
-    //std::cout << "next symbol: " << currPos.first << ", " << currPos.second << " | " << maze[currPos] << std::endl;
 
     return steps / 2;
+}
+
+// TODO Mistake lies here!!
+bool checkAround(size_t x, size_t y, std::map<std::pair<size_t, size_t>,
+    char> &loop, size_t size, std::set<std::pair<size_t, size_t>> &found) {
+
+    return (x != 1) && (x != size) && (y != 1) && (y != size) &&
+        (loop[std::make_pair(x - 1, y)] != ' ' || found.find(std::make_pair(x - 1, y)) != found.end()) &&
+        (loop[std::make_pair(x + 1, y)] != ' ' || found.find(std::make_pair(x + 1, y)) != found.end()) &&
+        (loop[std::make_pair(x, y - 1)] != ' ' || found.find(std::make_pair(x, y - 1)) != found.end()) &&
+        (loop[std::make_pair(x, y + 1)] != ' ' || found.find(std::make_pair(x, y + 1)) != found.end());
+}
+
+size_t getEnclosedCount(std::map<std::pair<size_t, size_t>, char> &loop, size_t size) {
+    size_t sum = 0;
+    std::set<std::pair<size_t, size_t>> found;
+    for (size_t i = 1; i <= size; i++) {
+        for (size_t m = 1; m <= size; m++) {
+            if(loop[std::make_pair(m, i)] == ' ' && checkAround(m, i, loop, size, found)) {
+                found.insert(std::make_pair(m, i));
+                sum++;
+            }
+        }
+    }
+
+    printLoopWithSpaces(loop, found, size);
+
+    return sum;
 }
 
 int main(void) {
@@ -174,11 +239,17 @@ int main(void) {
     std::map<std::pair<size_t, size_t>, char> maze;
 
     std::pair<size_t, size_t> sPos;
-    size_t edge = storeMaze(lines, maze, sPos);
+    size_t size = storeMaze(lines, maze, sPos);
 
-    std::cout << "Number of steps to get to the furthest point: " << getSteps(maze, sPos, edge) << std::endl;
+    std::map<std::pair<size_t, size_t>, char> loop;
+    initializeLoop(loop, size);
 
-    //printMaze(maze, edge);
+    std::cout << "Number of steps to get to the furthest point: " << getSteps(maze, sPos, size, loop) << std::endl;
+
+    std::cout << "Number of tiles enclosed by the loop: " << getEnclosedCount(loop, size) << std::endl;
+    
+    //printMaze(maze, size);
+    //printLoop(loop, size);
 
     return 0;
 }

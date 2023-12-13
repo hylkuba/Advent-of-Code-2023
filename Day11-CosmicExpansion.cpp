@@ -30,6 +30,13 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Prints whole universe to terminal
+ * 
+ * @param universe 
+ * @param x 
+ * @param y 
+ */
 void printUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, size_t x, size_t y) {
     for (size_t i = 1; i <= y; i++) {
         std::cout << std::setw(3) << i << " : ";
@@ -44,22 +51,26 @@ void printUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, size_t x
     }
 }
 
+/**
+ * @brief Prints all galaxy positions in format (x, y)
+ * 
+ * @param galaxyPos 
+ */
 void printGalaxyPos(std::vector<std::pair<size_t, size_t>> &galaxyPos) {
     for(const auto &galaxy : galaxyPos) {
         std::cout << "(" << galaxy.first << ", " << galaxy.second << ")" << std::endl;
     }
 }
 
-size_t pairsNeeded(size_t amountOfGalaxies) {
-    size_t result = 0;
-
-    for (size_t i = amountOfGalaxies - 1; i > 0; i--) {
-        result += i;
-    }
-
-    return result;
-}
-
+/**
+ * @brief Expands universe in both horizontal and vertical axis
+ * 
+ * @param universe 
+ * @param galaxyPos 
+ * @param uniX 
+ * @param uniY 
+ * @param expansion Size of how many times universe should be expanded
+ */
 void expandUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, std::vector<std::pair<size_t, size_t>> &galaxyPos,
     size_t uniX, size_t uniY, size_t expansion) {
 
@@ -112,6 +123,14 @@ void expandUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, std::ve
     }
 }
 
+/**
+ * @brief Uses map of universe to store galaxy positions into a vector
+ * 
+ * @param universe 
+ * @param galaxyPos 
+ * @param uniX Width of universe
+ * @param uniY Height of universe
+ */
 void getGalaxyPos(std::map<std::pair<size_t, size_t>, bool> &universe, std::vector<std::pair<size_t, size_t>> &galaxyPos,
     size_t uniX, size_t uniY) {
 
@@ -124,6 +143,13 @@ void getGalaxyPos(std::map<std::pair<size_t, size_t>, bool> &universe, std::vect
     }
 }
 
+/**
+ * @brief Stores lines loaded from file into a map of universe that holds information where galaxies are located
+ * 
+ * @param lines Vector of loaded lines from input file
+ * @param universe Map where key is a position (x, y) and value is either TRUE: galaxy or FALSE: space
+ * @return std::pair<size_t, size_t> Size of universe (x, y)
+ */
 std::pair<size_t, size_t> storeToMap(std::vector<std::string> &lines, std::map<std::pair<size_t, size_t>, bool> &universe) {
     size_t lineCount = 1;
     size_t uniX = 0;
@@ -144,6 +170,13 @@ std::pair<size_t, size_t> storeToMap(std::vector<std::string> &lines, std::map<s
     return std::make_pair(uniX, lineCount - 1);
 }
 
+/**
+ * @brief Calculates distance between two positions (as a number of squares to cross to get to final location)
+ * 
+ * @param startGalaxy 
+ * @param endGalaxy 
+ * @return size_t Distance
+ */
 size_t distanceBetween(std::pair<size_t, size_t> startGalaxy, std::pair<size_t, size_t> endGalaxy) {
     size_t startX = startGalaxy.first;
     size_t startY = startGalaxy.second;
@@ -156,6 +189,12 @@ size_t distanceBetween(std::pair<size_t, size_t> startGalaxy, std::pair<size_t, 
     return diffX + diffY;
 }
 
+/**
+ * @brief Calculates the sum of distances between all pairs of galaxies excluded of duplicitiess
+ * 
+ * @param galaxyPos Vector containing positions of existing galaxies
+ * @return size_t Sum of distances
+ */
 size_t sumOfDistances(std::vector<std::pair<size_t, size_t>> &galaxyPos) {
     size_t sum = 0;
 

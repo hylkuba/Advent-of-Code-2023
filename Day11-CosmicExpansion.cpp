@@ -6,7 +6,7 @@
 #include <map>
 #include <queue>
 #include <iomanip>
-#include <cstdint>
+#include <cmath>
 
 #define FILE "Day11-input.txt"
 
@@ -41,6 +41,12 @@ void printUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, size_t x
             }       
         }
         std::cout << std::endl;
+    }
+}
+
+void printGalaxyPos(std::vector<std::pair<size_t, size_t>> &galaxyPos) {
+    for(const auto &galaxy : galaxyPos) {
+        std::cout << "(" << galaxy.first << ", " << galaxy.second << ")" << std::endl;
     }
 }
 
@@ -150,17 +156,18 @@ size_t distanceBetween(std::pair<size_t, size_t> startGalaxy, std::pair<size_t, 
     return diffX + diffY;
 }
 
-uint64_t sumOfDistances(std::vector<std::pair<size_t, size_t>> &galaxyPos) {
-    std::vector<std::pair<size_t, size_t>> galaxiesToUse = galaxyPos;
-    uint64_t sum = 0;
+size_t sumOfDistances(std::vector<std::pair<size_t, size_t>> &galaxyPos) {
+    size_t sum = 0;
 
-    for (auto it = galaxyPos.rbegin(); it != galaxyPos.rend(); ++it) {
-        galaxiesToUse.erase(std::next(it).base());
-        for(const auto &other : galaxiesToUse) {
-            sum += distanceBetween(*it, other);
+    for (size_t i = 0; i < galaxyPos.size(); ++i) {
+        for (size_t j = i + 1; j < galaxyPos.size(); ++j) {
+            sum += distanceBetween(galaxyPos[i], galaxyPos[j]);
+            /*std::cout << "Distance between: " << galaxyPos[i].first << ", " << galaxyPos[i].second
+                      << " and " << galaxyPos[j].first << ", " << galaxyPos[j].second
+                      << " = " << distanceBetween(galaxyPos[i], galaxyPos[j]) << std::endl;*/
         }
-        //std::cout << "sum: " << sum << std::endl;
     }
+
     return sum;
 }
 
@@ -177,14 +184,12 @@ int main(void) {
 
     std::vector<std::pair<size_t, size_t>> galaxyPos, biggerGalaxyPos;
     getGalaxyPos(universe, galaxyPos, uniX, uniY);
-    biggerGalaxyPos = galaxyPos;
+    getGalaxyPos(universe, biggerGalaxyPos, uniX, uniY);
 
     expandUniverse(universe, galaxyPos, uniX, uniY, 1);
-    expandUniverse(universe, biggerGalaxyPos, uniX, uniY, 1000000);
+    expandUniverse(universe, biggerGalaxyPos, uniX, uniY, 999999);
 
-    std::cout << "size of bigger: " << biggerGalaxyPos.size() << std::endl;
-
-    //std::cout << "Sum of distances between galaxies is: " << sumOfDistances(galaxyPos) << std::endl;
+    std::cout << "Sum of distances between galaxies is: " << sumOfDistances(galaxyPos) << std::endl;
     std::cout << "Sum of distances between galaxies in BIGGER universe is: " << sumOfDistances(biggerGalaxyPos) << std::endl;
 
     return 0;

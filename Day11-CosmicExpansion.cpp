@@ -6,6 +6,7 @@
 #include <map>
 #include <queue>
 #include <iomanip>
+#include <cstdint>
 
 #define FILE "Day11-input.txt"
 
@@ -53,24 +54,11 @@ size_t pairsNeeded(size_t amountOfGalaxies) {
     return result;
 }
 
-void expandColumn(std::map<std::pair<size_t, size_t>, bool> &universe, size_t currX, size_t uniX, size_t uniY) {
-    for (size_t x = uniX; x > currX; x--) {
-        for (size_t y = 1; y <= uniY; y++) {
-            universe[std::make_pair(x, y)] = universe[std::make_pair(x - 1, y)];
-        }
-    }
-}
+void expandUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, std::vector<std::pair<size_t, size_t>> &galaxyPos,
+    size_t uniX, size_t uniY, size_t expansion) {
 
-void expandRow(std::map<std::pair<size_t, size_t>, bool> &universe, size_t currY, size_t uniX, size_t uniY) {
-    for (size_t y = uniY; y > currY; y--) {
-        for (size_t x = 1; x <= uniX; x++) {
-            universe[std::make_pair(x, y)] = universe[std::make_pair(x, y - 1)];
-        }
-    }
-}
-
-void expandUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, size_t &uniX, size_t &uniY) {
     // *Check rows first
+    size_t moveY = 0;
     for (size_t y = 1; y <= uniY; y++) {
         bool galaxyFound = false;
         for (size_t x = 1; x <= uniX; x++) {
@@ -81,14 +69,20 @@ void expandUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, size_t 
         }
 
         if(!galaxyFound) {
-            //std::cout << "Expaned on line: " << y << std::endl;
-            uniY++;
-            expandRow(universe, y, uniX, uniY);
-            y++;
+            for (auto it = galaxyPos.rbegin(); it != galaxyPos.rend(); ++it) {
+                if(it->second > y + moveY) {
+                    size_t tmpX = it->first;
+                    size_t tmpY = it->second;
+                    galaxyPos.erase(std::next(it).base());
+                    galaxyPos.push_back(std::make_pair(tmpX, tmpY + expansion));
+                }
+            }
+            moveY += expansion;
         }
     }
 
     // *Check columns
+    size_t moveX = 0;
     for (size_t x = 1; x <= uniX; x++) {
         bool galaxyFound = false;
         for (size_t y = 1; y <= uniY; y++) {
@@ -99,21 +93,26 @@ void expandUniverse(std::map<std::pair<size_t, size_t>, bool> &universe, size_t 
         }
 
         if(!galaxyFound) {
-            //std::cout << "Expaned on column: " << x << std::endl;
-            uniX++;
-            expandColumn(universe, x, uniX, uniY);
-            x++;
+            for (auto it = galaxyPos.rbegin(); it != galaxyPos.rend(); ++it) {
+                if(it->first > x + moveX) {
+                    size_t tmpX = it->first;
+                    size_t tmpY = it->second;
+                    galaxyPos.erase(std::next(it).base());
+                    galaxyPos.push_back(std::make_pair(tmpX + expansion, tmpY));
+                }
+            }
+            moveX += expansion;
         }
     }
 }
 
-void getGalaxyPos(std::map<std::pair<size_t, size_t>, bool> &universe, std::set<std::pair<size_t, size_t>> &galaxyPos,
+void getGalaxyPos(std::map<std::pair<size_t, size_t>, bool> &universe, std::vector<std::pair<size_t, size_t>> &galaxyPos,
     size_t uniX, size_t uniY) {
 
     for (size_t y = 1; y <= uniY; y++) {
         for (size_t x = 1; x <= uniX; x++) {
             if(universe[std::make_pair(x, y)]) {
-                galaxyPos.insert(std::make_pair(x, y));
+                galaxyPos.push_back(std::make_pair(x, y));
             }
         }
     }
@@ -151,16 +150,16 @@ size_t distanceBetween(std::pair<size_t, size_t> startGalaxy, std::pair<size_t, 
     return diffX + diffY;
 }
 
-size_t sumOfDistances(std::set<std::pair<size_t, size_t>> &galaxyPos, size_t uniX, size_t uniY) {
-    std::set<std::pair<size_t, size_t>> galaxiesToUse = galaxyPos;
-    size_t sum = 0;
+uint64_t sumOfDistances(std::vector<std::pair<size_t, size_t>> &galaxyPos) {
+    std::vector<std::pair<size_t, size_t>> galaxiesToUse = galaxyPos;
+    uint64_t sum = 0;
 
-    for(const auto &galaxy : galaxyPos) {
-        galaxiesToUse.erase(galaxy);
-
+    for (auto it = galaxyPos.rbegin(); it != galaxyPos.rend(); ++it) {
+        galaxiesToUse.erase(std::next(it).base());
         for(const auto &other : galaxiesToUse) {
-            sum += distanceBetween(galaxy, other);
+            sum += distanceBetween(*it, other);
         }
+        //std::cout << "sum: " << sum << std::endl;
     }
     return sum;
 }
@@ -176,14 +175,17 @@ int main(void) {
     std::pair<size_t, size_t> universeSize= storeToMap(lines, universe);
     size_t uniX = universeSize.first, uniY = universeSize.second;
 
-    expandUniverse(universe, uniX, uniY);
-
-    std::set<std::pair<size_t, size_t>> galaxyPos;
+    std::vector<std::pair<size_t, size_t>> galaxyPos, biggerGalaxyPos;
     getGalaxyPos(universe, galaxyPos, uniX, uniY);
+    biggerGalaxyPos = galaxyPos;
 
-    std::cout << "Pairs needed: " << pairsNeeded(galaxyPos.size()) << std::endl;
+    expandUniverse(universe, galaxyPos, uniX, uniY, 1);
+    expandUniverse(universe, biggerGalaxyPos, uniX, uniY, 1000000);
 
-    std::cout << "Sum of distances between galaxies is: " << sumOfDistances(galaxyPos, uniX, uniY) << std::endl;
+    std::cout << "size of bigger: " << biggerGalaxyPos.size() << std::endl;
+
+    //std::cout << "Sum of distances between galaxies is: " << sumOfDistances(galaxyPos) << std::endl;
+    std::cout << "Sum of distances between galaxies in BIGGER universe is: " << sumOfDistances(biggerGalaxyPos) << std::endl;
 
     return 0;
 }

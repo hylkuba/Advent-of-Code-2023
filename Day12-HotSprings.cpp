@@ -2,19 +2,15 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <iomanip>
+#include <algorithm>
+#include <cstdlib>
+#include <iterator>
 
-#define FILE "Day11-input.txt"
+#define FILE "Day12-input.txt"
 
-/**
- * @brief Reads file defined as FILE
- * 
- * @param lines vector of strings where all lines of file will be stored
- */
 void readFile(std::vector<std::string> &lines) {
-
     std::ifstream inputFile(FILE);
-    
+
     if (inputFile.is_open()) {
         std::string line;
         while (std::getline(inputFile, line)) {
@@ -26,10 +22,73 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+void printRows(const std::vector<std::pair<std::string, std::vector<int>>> &rows) {
+    for(const auto &row : rows) {
+        std::cout << row.first << " ";
+        for(const auto &num : row.second) {
+            std::cout << num << ", ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+int countArrangements(const std::string &row, const std::vector<int> &damagedSprings) {
+    int sum = 0;
+
+    return sum;
+}
+
+void storeLines(std::vector<std::pair<std::string, std::vector<int>>> &rows,
+    const std::vector<std::string> &lines) {
+    
+    std::string word = "", partString = "";
+    std::vector<int> numVector;
+    bool num = false;
+    
+    for(const auto &line : lines) {
+        for (size_t i = 0; i < line.length(); i++) {
+            if(line[i] == ' ') {
+                num = true;
+                partString = word;
+                word = "";
+                continue;
+            }
+
+            if(!num) {
+                word += line[i];
+            } else {
+                if(line[i] == ',') {
+                    numVector.push_back(stoi(word));
+                    word = "";
+                } else {
+                    word += line[i];
+                }
+            }
+        }
+        numVector.push_back(stoi(word));
+        rows.push_back(std::make_pair(partString, numVector));
+        numVector.clear();
+        word = "";
+    }
+}
+
 int main(void) {
     std::vector<std::string> lines;
 
     readFile(lines);
+
+    std::vector<std::pair<std::string, std::vector<int>>> rows;
+    storeLines(rows, lines);
+
+    int totalArrangements = 0;
+    //printRows(rows);
+
+    for (const auto &row : rows) {
+        totalArrangements += countArrangements(row.first, row.second);
+    }
+
+    std::cout << "Total arrangements: " << totalArrangements << std::endl;
 
     return 0;
 }

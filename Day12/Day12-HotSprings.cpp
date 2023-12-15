@@ -9,6 +9,8 @@
 
 #define FILE "Day12-input.txt"
 
+#define MULTIPLY 5
+
 /**
  * @brief Reads file defined as FILE
  * 
@@ -33,7 +35,7 @@ void readFile(std::vector<std::string> &lines) {
  * 
  * @param rows 
  */
-void printRows(const std::vector<std::pair<std::string, std::vector<int>>> &rows) {
+void printRows(const std::vector<std::pair<std::string, std::vector<size_t>>> &rows) {
     for(const auto &row : rows) {
         std::cout << row.first << " ";
         for(const auto &num : row.second) {
@@ -42,32 +44,6 @@ void printRows(const std::vector<std::pair<std::string, std::vector<int>>> &rows
         std::cout << std::endl;
     }
     std::cout << std::endl;
-}
-
-/**
- * @brief Given a string, generates all possible permutations where '?' is converted to either '.' or '#'
- *        Stores all generated strings to a set of combinations that is parsed 
- * 
- * @param input String containing '?'
- * @param index Index of current character 
- * @param current Current character
- * @param combinations Set in which all combinations are stored
- */
-void generateCombinations(const std::string& input, size_t index, std::string& current, std::set<std::string>& combinations) {
-    if (index == input.size()) {
-        combinations.insert(current);
-        return;
-    }
-
-    if (input[index] == '?') {
-        current[index] = '.';
-        generateCombinations(input, index + 1, current, combinations);
-        current[index] = '#';
-        generateCombinations(input, index + 1, current, combinations);
-        current[index] = '?'; // backtracking to handle multiple question marks
-    } else {
-        generateCombinations(input, index + 1, current, combinations);
-    }
 }
 
 /**
@@ -112,6 +88,34 @@ bool checkValidCombination(const std::string &combination, const std::vector<siz
 }
 
 /**
+ * @brief Given a string, generates all possible permutations where '?' is converted to either '.' or '#'
+ * 
+ * @param input String containing '?'
+ * @param index Index of current character 
+ * @param current Current character
+ * @param sum Sum of all possible combinations
+ * @param numbers Vector of numbers
+ */
+void generateCombinations(const std::string& input, size_t index, std::string& current, size_t &sum, 
+    const std::vector<size_t> &numbers) {
+    
+    if (index == input.size()) {
+        sum += checkValidCombination(current, numbers) ? 1 : 0;
+        return;
+    }
+
+    if (input[index] == '?') {
+        current[index] = '.';
+        generateCombinations(input, index + 1, current, sum, numbers);
+        current[index] = '#';
+        generateCombinations(input, index + 1, current, sum, numbers);
+        current[index] = '?'; // backtracking to handle multiple question marks
+    } else {
+        generateCombinations(input, index + 1, current, sum, numbers);
+    }
+}
+
+/**
  * @brief Sums all possible combinations that follow rules
  * 
  * @param row current string containing '?'
@@ -121,14 +125,7 @@ bool checkValidCombination(const std::string &combination, const std::vector<siz
 size_t countArrangements(std::string row, const std::vector<size_t> &numbers) {
     size_t sum = 0;
 
-    std::set<std::string> combinations;
-    generateCombinations(row, 0, row, combinations);
-
-    for(const auto &combi : combinations) {
-        if(checkValidCombination(combi, numbers)) {
-            sum++;
-        }
-    }
+    generateCombinations(row, 0, row, sum, numbers);
 
     return sum;
 }
@@ -174,6 +171,30 @@ void storeLines(std::vector<std::pair<std::string, std::vector<size_t>>> &rows,
     }
 }
 
+/**
+ * @brief Multiplies vector size by the value defined in MULTIPLY
+ * 
+ * @param rows 
+ * @param multiplied 
+ */
+void multipleRows(std::vector<std::pair<std::string, std::vector<size_t>>> &rows,
+    std::vector<std::pair<std::string, std::vector<size_t>>> &multiplied) {
+
+    for (const auto &row : rows) {
+        std::string word = row.first;
+        std::vector<size_t> numbers = row.second;
+
+        for (size_t i = 0; i < MULTIPLY - 1; i++) {
+            word += "?";
+            word += row.first;
+            for (const auto &num : row.second) {
+                numbers.push_back(num);
+            }
+        }
+        multiplied.push_back(std::make_pair(word, numbers));
+    }
+}
+
 int main(void) {
     std::vector<std::string> lines;
 
@@ -187,8 +208,17 @@ int main(void) {
     for (const auto &row : rows) {
         totalArrangements += countArrangements(row.first, row.second);
     }
-
     std::cout << "Total arrangements: " << totalArrangements << std::endl;
+
+    std::vector<std::pair<std::string, std::vector<size_t>>> multipliedRows;
+    
+    multipleRows(rows, multipliedRows);
+
+    size_t totalArrangementsMultiplied = 0;
+    for (const auto &row : multipliedRows) {
+        totalArrangementsMultiplied += countArrangements(row.first, row.second);
+    }
+    std::cout << "Total arrangements of multipliedRows: " << totalArrangementsMultiplied << std::endl;
 
     return 0;
 }

@@ -2,12 +2,18 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
 
 #define FILE "Day12-input.txt"
 
+/**
+ * @brief Reads file defined as FILE
+ * 
+ * @param lines vector of strings where all lines of file will be stored
+ */
 void readFile(std::vector<std::string> &lines) {
     std::ifstream inputFile(FILE);
 
@@ -22,6 +28,11 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Prints all rows
+ * 
+ * @param rows 
+ */
 void printRows(const std::vector<std::pair<std::string, std::vector<int>>> &rows) {
     for(const auto &row : rows) {
         std::cout << row.first << " ";
@@ -33,17 +44,64 @@ void printRows(const std::vector<std::pair<std::string, std::vector<int>>> &rows
     std::cout << std::endl;
 }
 
-int countArrangements(const std::string &row, const std::vector<int> &damagedSprings) {
-    int sum = 0;
+/**
+ * @brief Given a string, generates all possible permutations where '?' is converted to either '.' or '#'
+ *        Stores all generated strings to a set of combinations that is parsed 
+ * 
+ * @param input String containing '?'
+ * @param index Index of current character 
+ * @param current Current character
+ * @param combinations Set in which all combinations are stored
+ */
+void generateCombinations(const std::string& input, size_t index, std::string& current, std::set<std::string>& combinations) {
+    if (index == input.size()) {
+        combinations.insert(current);
+        return;
+    }
+
+    if (input[index] == '?') {
+        current[index] = '.';
+        generateCombinations(input, index + 1, current, combinations);
+        current[index] = '#';
+        generateCombinations(input, index + 1, current, combinations);
+        current[index] = '?'; // backtracking to handle multiple question marks
+    } else {
+        generateCombinations(input, index + 1, current, combinations);
+    }
+}
+
+/**
+ * @brief Sums all possible combinations that follow rules
+ * 
+ * @param row current string containing '?'
+ * @param numbers Vector of amount of parts that should be continous 
+ * @return size_t Sum of all possible combinations that follow rules
+ */
+size_t countArrangements(std::string row, const std::vector<size_t> &numbers) {
+    size_t sum = 0;
+
+    std::set<std::string> combinations;
+    generateCombinations(row, 0, row, combinations);
+
+    for(const auto &combination : combinations) {
+        std::cout << combination << std::endl;
+    }
 
     return sum;
 }
 
-void storeLines(std::vector<std::pair<std::string, std::vector<int>>> &rows,
+/**
+ * @brief Iterates through vector containing lines read from file and stores them to vector of pairs
+ *        following the assignment
+ * 
+ * @param rows Vector of pairs. 1st string containing '?', 2nd vector of numbers
+ * @param lines Vector of lines read from file
+ */
+void storeLines(std::vector<std::pair<std::string, std::vector<size_t>>> &rows,
     const std::vector<std::string> &lines) {
     
     std::string word = "", partString = "";
-    std::vector<int> numVector;
+    std::vector<size_t> numVector;
     bool num = false;
     
     for(const auto &line : lines) {
@@ -59,14 +117,14 @@ void storeLines(std::vector<std::pair<std::string, std::vector<int>>> &rows,
                 word += line[i];
             } else {
                 if(line[i] == ',') {
-                    numVector.push_back(stoi(word));
+                    numVector.push_back(stoll(word));
                     word = "";
                 } else {
                     word += line[i];
                 }
             }
         }
-        numVector.push_back(stoi(word));
+        numVector.push_back(stoll(word));
         rows.push_back(std::make_pair(partString, numVector));
         numVector.clear();
         word = "";
@@ -78,15 +136,16 @@ int main(void) {
 
     readFile(lines);
 
-    std::vector<std::pair<std::string, std::vector<int>>> rows;
+    std::vector<std::pair<std::string, std::vector<size_t>>> rows;
     storeLines(rows, lines);
 
-    int totalArrangements = 0;
-    //printRows(rows);
+    size_t totalArrangements = 0;
 
-    for (const auto &row : rows) {
+    /*for (const auto &row : rows) {
         totalArrangements += countArrangements(row.first, row.second);
-    }
+    }*/
+
+    countArrangements("?###????????", {3, 2, 1});
 
     std::cout << "Total arrangements: " << totalArrangements << std::endl;
 

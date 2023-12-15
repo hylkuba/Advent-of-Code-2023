@@ -71,6 +71,47 @@ void generateCombinations(const std::string& input, size_t index, std::string& c
 }
 
 /**
+ * @brief Checks if parsed string (combination) follows rules by numbers
+ * 
+ * @param combination 
+ * @param numbers 
+ * @return true 
+ * @return false 
+ */
+bool checkValidCombination(const std::string &combination, const std::vector<size_t> &numbers) {
+    size_t tmpLen = 0, index = 0, maxIndex = numbers.size();
+
+    for (size_t i = 0; i < combination.length(); i++) {
+        if(index == maxIndex) {
+            if(combination[i] == '#') {
+                return false;
+            }
+            continue;
+        }
+        
+        if(combination[i] == '#') {
+            tmpLen++;
+        } else if (tmpLen > 0 && combination[i] == '.') {
+            if(tmpLen == numbers[index]) {
+                tmpLen = 0;
+                index++;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    if(index != maxIndex && tmpLen > 0) {
+        if(tmpLen != numbers[index]) {
+            return false;
+        }
+        index++;
+    }
+
+    return index == maxIndex;
+}
+
+/**
  * @brief Sums all possible combinations that follow rules
  * 
  * @param row current string containing '?'
@@ -83,8 +124,10 @@ size_t countArrangements(std::string row, const std::vector<size_t> &numbers) {
     std::set<std::string> combinations;
     generateCombinations(row, 0, row, combinations);
 
-    for(const auto &combination : combinations) {
-        std::cout << combination << std::endl;
+    for(const auto &combi : combinations) {
+        if(checkValidCombination(combi, numbers)) {
+            sum++;
+        }
     }
 
     return sum;
@@ -141,11 +184,9 @@ int main(void) {
 
     size_t totalArrangements = 0;
 
-    /*for (const auto &row : rows) {
+    for (const auto &row : rows) {
         totalArrangements += countArrangements(row.first, row.second);
-    }*/
-
-    countArrangements("?###????????", {3, 2, 1});
+    }
 
     std::cout << "Total arrangements: " << totalArrangements << std::endl;
 

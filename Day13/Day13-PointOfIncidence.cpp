@@ -28,10 +28,48 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+void printPatterns(const std::vector<std::vector<std::vector<char>>> &patterns) {
+    for(const auto &pattern : patterns) {
+        for(const auto &row : pattern) {
+            for(const auto &column : row) {
+                std::cout << column;
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "-----------------------------------------------" << std::endl;
+    }
+}
+
+void storeLines(std::vector<std::string> &lines, std::vector<std::vector<std::vector<char>>> &patterns) {
+    std::vector<std::vector<char>> currPattern;
+    for(const auto &line : lines) {
+        if(line == "") {
+            patterns.push_back(currPattern);
+            currPattern.clear();
+            continue;
+        }
+        std::vector<char> currRow;
+        for (size_t i = 0; i < line.length(); i++) {
+            currRow.push_back(line[i]);   
+        }
+        currPattern.push_back(currRow);
+    }
+    patterns.push_back(currPattern);
+}
+
 int main(void) {
     std::vector<std::string> lines;
 
     readFile(lines);
+
+    /* First vector iterates through all patterns, 2nd vector iterates through rows,
+        3rd vector iterates through columns
+    */
+    std::vector<std::vector<std::vector<char>>> patterns;
+
+    storeLines(lines, patterns);
+
+    //printPatterns(patterns);
 
     return 0;
 }

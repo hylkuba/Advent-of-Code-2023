@@ -141,28 +141,43 @@ size_t verticalMirror(const std::vector<std::vector<char>> &pattern) {
 }
 
 size_t mirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
-    size_t result = 0;
-
-    result = verticalMirror(pattern);
-    
-    if(result <= 0) {
-        result = horizontalMirror(pattern);
-    }
+    size_t result = ULLONG_MAX;
 
     if(smudge) {
         std::vector<std::vector<std::vector<char>>> generated = generateCombinations(pattern);
+        //printPatterns(generated);
+        
         for(const auto &other : generated) {
-            size_t tmpResult = ULLONG_MAX;
-            
-            tmpResult = verticalMirror(other);
-    
-            if(tmpResult <= 0) {
-                tmpResult = horizontalMirror(other);
+            size_t tmpResult = ULLONG_MAX, tmpResult2 = ULLONG_MAX;
+
+            for(const auto &row : other) {
+                for(const auto &column : row) {
+                    std::cout << column;
+                }
+                std::cout << std::endl;
             }
 
-            if(tmpResult < result && tmpResult > 0) {
+            tmpResult = verticalMirror(other);
+            tmpResult2 = horizontalMirror(other);
+
+            if(tmpResult > 0) {
                 result = tmpResult;
+            } 
+            
+            if(tmpResult2 > 0) {
+                result = tmpResult2;
             }
+
+            //std::cout << result << "\n??????????????????????????????????????" << std::endl;
+            if(result > 0) {
+                break;
+            }
+        }
+    } else {
+        result = verticalMirror(pattern);
+    
+        if(result <= 0) {
+            result = horizontalMirror(pattern);
         }
     }
 

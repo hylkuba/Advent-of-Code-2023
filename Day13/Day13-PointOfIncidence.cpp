@@ -57,34 +57,62 @@ void storeLines(std::vector<std::string> &lines, std::vector<std::vector<std::ve
     patterns.push_back(currPattern);
 }
 
+bool checkHorizontalTillEnd(const std::vector<std::vector<char>> &pattern,
+    int start, int end, int width) {
+    
+    int currL = start;
+    int currR = start + 1;
+    do {
+        ///std::cout << "CurrL: " << currL << " currR: " << currR << std::endl;
+        for(int i = 0; i < width; i++) {
+            if(pattern[currL][i] != pattern[currR][i]) {
+                return false;
+            }
+        }
+        currL--;
+        currR++;
+    } while(currL >= 0 && currR <= end);
+
+    return true;
+}
+
 size_t horizontalMirror(const std::vector<std::vector<char>> &pattern) {
     size_t result = 0;
+    int width = pattern[0].size(), height = pattern.size();
 
-    return result;
+    for (int i = 0; i < height - 1; i++) {
+        //std::cout << "Line: " << i << std::endl;
+        if(checkHorizontalTillEnd(pattern, i, height - 1, width)) {
+            result = i + 1;
+        }
+    }
+
+    return 100 * result;
 }
 
 bool checkVerticalTillEnd(const std::vector<std::vector<char>> &pattern,
-    size_t start, size_t end, size_t height) {
+    int start, int end, int height) {
     
-    size_t currL = start;
-    size_t currR = start + 1;
+    int currL = start;
+    int currR = start + 1;
     do {
-        for(size_t i = 0; i < height; i++) {
+        for(int i = 0; i < height; i++) {
             if(pattern[i][currL] != pattern[i][currR]) {
                 return false;
             }
         }
         currL--;
         currR++;
-    } while(currL > 0 && currR < end);
+    } while(currL >= 0 && currR <= end);
 
     return true;
 }
 
 size_t verticalMirror(const std::vector<std::vector<char>> &pattern) {
-    size_t result = 0, width = pattern[0].size(), height = pattern.size();
+    size_t result = 0;
+    int width = pattern[0].size(), height = pattern.size();
 
-    for (size_t i = 0; i < width - 1; i++) {
+    for (int i = 0; i < width - 1; i++) {
         if(checkVerticalTillEnd(pattern, i, width - 1, height)) {
             result = i + 1;
         }
@@ -114,7 +142,7 @@ size_t summarize(const std::vector<std::vector<std::vector<char>>> &patterns) {
 int main(void) {
     std::vector<std::string> lines;
 
-    readFile(lines);
+    readFile(lines);    
 
     /* First vector iterates through all patterns, 2nd vector iterates through rows,
         3rd vector iterates through columns

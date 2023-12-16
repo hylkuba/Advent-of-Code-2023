@@ -57,6 +57,60 @@ void storeLines(std::vector<std::string> &lines, std::vector<std::vector<std::ve
     patterns.push_back(currPattern);
 }
 
+size_t horizontalMirror(const std::vector<std::vector<char>> &pattern) {
+    size_t result = 0;
+
+    return result;
+}
+
+bool checkVerticalTillEnd(const std::vector<std::vector<char>> &pattern,
+    size_t start, size_t end, size_t height) {
+    
+    size_t currL = start;
+    size_t currR = start + 1;
+    do {
+        for(size_t i = 0; i < height; i++) {
+            if(pattern[i][currL] != pattern[i][currR]) {
+                return false;
+            }
+        }
+        currL--;
+        currR++;
+    } while(currL > 0 && currR < end);
+
+    return true;
+}
+
+size_t verticalMirror(const std::vector<std::vector<char>> &pattern) {
+    size_t result = 0, width = pattern[0].size(), height = pattern.size();
+
+    for (size_t i = 0; i < width - 1; i++) {
+        if(checkVerticalTillEnd(pattern, i, width - 1, height)) {
+            result = i + 1;
+        }
+    }
+    
+    return result;
+}
+
+size_t mirror(const std::vector<std::vector<char>> &pattern) {
+    size_t result = verticalMirror(pattern);
+    
+    if(result > 0) return result;
+
+    return horizontalMirror(pattern);
+}
+
+size_t summarize(const std::vector<std::vector<std::vector<char>>> &patterns) {
+    size_t sum = 0;
+
+    for(const auto &pattern : patterns) {
+        sum += mirror(pattern);
+    }
+
+    return sum;
+}
+
 int main(void) {
     std::vector<std::string> lines;
 
@@ -68,6 +122,8 @@ int main(void) {
     std::vector<std::vector<std::vector<char>>> patterns;
 
     storeLines(lines, patterns);
+
+    std::cout << "Summary is: " << summarize(patterns) << std::endl;
 
     //printPatterns(patterns);
 

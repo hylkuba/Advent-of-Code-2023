@@ -57,19 +57,33 @@ void storeLines(std::vector<std::string> &lines, std::vector<std::vector<std::ve
     patterns.push_back(currPattern);
 }
 
+std::vector<std::vector<std::vector<char>>> generateCombinations(const std::vector<std::vector<char>> &pattern) {
+    std::vector<std::vector<std::vector<char>>> generated;
+
+    for (size_t i = 0; i < pattern.size(); ++i) {
+        for (size_t j = 0; j < pattern[i].size(); ++j) {
+            // Create a copy of the original pattern
+            std::vector<std::vector<char>> newPattern = pattern;
+
+            // Change exactly one character at a time
+            newPattern[i][j] = (newPattern[i][j] == '.') ? '#' : '.';
+
+            // Add the modified pattern to the result vector
+            generated.push_back(newPattern);
+        }
+    }
+
+    return generated;
+}
+
 bool checkHorizontalTillEnd(const std::vector<std::vector<char>> &pattern,
-    int start, int end, int width, bool smudge, bool &used) {
+    int start, int end, int width) {
     
     int currL = start;
     int currR = start + 1;
     do {
-        ///std::cout << "CurrL: " << currL << " currR: " << currR << std::endl;
         for(int i = 0; i < width; i++) {
             if(pattern[currL][i] != pattern[currR][i]) {
-                if(smudge && !used) {
-                    used = true;
-                    continue;
-                }
                 return false;
             }
         }
@@ -80,14 +94,12 @@ bool checkHorizontalTillEnd(const std::vector<std::vector<char>> &pattern,
     return true;
 }
 
-size_t horizontalMirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
+size_t horizontalMirror(const std::vector<std::vector<char>> &pattern) {
     size_t result = 0;
     int width = pattern[0].size(), height = pattern.size();
-    
-    bool used = false;
 
     for (int i = 0; i < height - 1; i++) {
-        if(checkHorizontalTillEnd(pattern, i, height - 1, width, smudge, used)) {
+        if(checkHorizontalTillEnd(pattern, i, height - 1, width)) {
             result = i + 1;
             break;
         }
@@ -97,17 +109,13 @@ size_t horizontalMirror(const std::vector<std::vector<char>> &pattern, bool smud
 }
 
 bool checkVerticalTillEnd(const std::vector<std::vector<char>> &pattern,
-    int start, int end, int height, bool smudge, bool &used) {
+    int start, int end, int height) {
     
     int currL = start;
     int currR = start + 1;
     do {
         for(int i = 0; i < height; i++) {
             if(pattern[i][currL] != pattern[i][currR]) {
-                if(smudge && !used) {
-                    used = true;
-                    continue;
-                }
                 return false;
             }
         }
@@ -118,14 +126,12 @@ bool checkVerticalTillEnd(const std::vector<std::vector<char>> &pattern,
     return true;
 }
 
-size_t verticalMirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
+size_t verticalMirror(const std::vector<std::vector<char>> &pattern) {
     size_t result = 0;
     int width = pattern[0].size(), height = pattern.size();
 
-    bool used = false;
-
     for (int i = 0; i < width - 1; i++) {
-        if(checkVerticalTillEnd(pattern, i, width - 1, height, smudge, used)) {
+        if(checkVerticalTillEnd(pattern, i, width - 1, height)) {
             result = i + 1;
             break;
         }
@@ -135,11 +141,32 @@ size_t verticalMirror(const std::vector<std::vector<char>> &pattern, bool smudge
 }
 
 size_t mirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
-    size_t result = verticalMirror(pattern, smudge);
-    
-    if(result > 0) return result;
+    size_t result = 0;
 
-    return horizontalMirror(pattern, smudge);
+    result = verticalMirror(pattern);
+    
+    if(result <= 0) {
+        result = horizontalMirror(pattern);
+    }
+
+    if(smudge) {
+        std::vector<std::vector<std::vector<char>>> generated = generateCombinations(pattern);
+        for(const auto &other : generated) {
+            size_t tmpResult = ULLONG_MAX;
+            
+            tmpResult = verticalMirror(other);
+    
+            if(tmpResult <= 0) {
+                tmpResult = horizontalMirror(other);
+            }
+
+            if(tmpResult < result && tmpResult > 0) {
+                result = tmpResult;
+            }
+        }
+    }
+
+    return result;
 }
 
 size_t summarize(const std::vector<std::vector<std::vector<char>>> &patterns, bool smudge) {
@@ -164,7 +191,7 @@ int main(void) {
 
     storeLines(lines, patterns);
 
-    std::cout << "Summary is: " << summarize(patterns, false) << std::endl;
+    //std::cout << "Summary is: " << summarize(patterns, false) << std::endl;
 
     std::cout << "Summary with smudge: " << summarize(patterns, true) << std::endl;
 

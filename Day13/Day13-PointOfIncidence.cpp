@@ -146,37 +146,40 @@ size_t mirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
     if(smudge) {
         std::vector<std::vector<std::vector<char>>> generated = generateCombinations(pattern);
         //printPatterns(generated);
-        result = verticalMirror(pattern);
-    
-        if(result <= 0) {
-            result = horizontalMirror(pattern);
+        size_t normalResultIndexVertical = verticalMirror(pattern);
+        size_t normalResult = normalResultIndexVertical;
+
+        size_t normalResultIndexHorizontal = 0;
+        
+        if(normalResult <= 0) {
+            normalResult = horizontalMirror(pattern);
+            normalResultIndexHorizontal = normalResult / 100;
         }
 
-        //std::cout << "Normal result: " << result << std::endl;
-        
+        size_t cnt = 0;
         for(const auto &other : generated) {
             size_t tmpResult = ULLONG_MAX, tmpResult2 = ULLONG_MAX;
 
-            /*for(const auto &row : other) {
-                for(const auto &column : row) {
-                    std::cout << column;
-                }
-                std::cout << std::endl;
-            }*/
             tmpResult = verticalMirror(other);
             tmpResult2 = horizontalMirror(other);
 
-            if(tmpResult > 0 && tmpResult != result) {
+
+            if(tmpResult > 0 && tmpResult != ULLONG_MAX && tmpResult != normalResultIndexVertical) {
                 result = tmpResult;
+                cnt++;
                 break;
-            } 
-            
-            if(tmpResult2 > 0 && tmpResult2 != result) {
+            }
+
+            if(tmpResult2 > 0 && tmpResult2 != ULLONG_MAX && tmpResult2 / 100 != normalResultIndexHorizontal) {
                 result = tmpResult2;
+                cnt++;
                 break;
             }
         }
-        //std::cout << "Smudge: " << result << "\n??????????????????????????????????????" << std::endl;
+
+        if(cnt == 0) {
+            result = normalResult;
+        }
     } else {
         result = verticalMirror(pattern);
     

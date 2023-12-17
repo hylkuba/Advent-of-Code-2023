@@ -146,33 +146,37 @@ size_t mirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
     if(smudge) {
         std::vector<std::vector<std::vector<char>>> generated = generateCombinations(pattern);
         //printPatterns(generated);
+        result = verticalMirror(pattern);
+    
+        if(result <= 0) {
+            result = horizontalMirror(pattern);
+        }
+
+        //std::cout << "Normal result: " << result << std::endl;
         
         for(const auto &other : generated) {
             size_t tmpResult = ULLONG_MAX, tmpResult2 = ULLONG_MAX;
 
-            for(const auto &row : other) {
+            /*for(const auto &row : other) {
                 for(const auto &column : row) {
                     std::cout << column;
                 }
                 std::cout << std::endl;
-            }
-
+            }*/
             tmpResult = verticalMirror(other);
             tmpResult2 = horizontalMirror(other);
 
-            if(tmpResult > 0) {
+            if(tmpResult > 0 && tmpResult != result) {
                 result = tmpResult;
+                break;
             } 
             
-            if(tmpResult2 > 0) {
+            if(tmpResult2 > 0 && tmpResult2 != result) {
                 result = tmpResult2;
-            }
-
-            //std::cout << result << "\n??????????????????????????????????????" << std::endl;
-            if(result > 0) {
                 break;
             }
         }
+        //std::cout << "Smudge: " << result << "\n??????????????????????????????????????" << std::endl;
     } else {
         result = verticalMirror(pattern);
     
@@ -206,7 +210,7 @@ int main(void) {
 
     storeLines(lines, patterns);
 
-    //std::cout << "Summary is: " << summarize(patterns, false) << std::endl;
+    std::cout << "Summary is: " << summarize(patterns, false) << std::endl;
 
     std::cout << "Summary with smudge: " << summarize(patterns, true) << std::endl;
 

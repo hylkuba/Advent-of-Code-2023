@@ -59,6 +59,26 @@ void storeWords(std::string &line, std::vector<std::string> &words) {
     words.push_back(tmp);
 }
 
+size_t hash(std::string word) {
+    size_t charVal = 0;
+
+    for (size_t i = 0; i < word.length(); i++) {
+        charVal += word[i];
+        charVal *= 17;
+        charVal %= 256;
+    }
+
+    return charVal;
+}
+
+size_t sumOfHashes(const std::vector<std::string> &words) {
+    size_t sum = 0;
+    for(const auto &word : words) {
+        sum += hash(word);
+    }
+    return sum;
+}
+
 int main(void) {
     std::string line;
 
@@ -68,7 +88,9 @@ int main(void) {
 
     storeWords(line, words);
 
-    printWords(words);
+    std::cout << "The sum of hashes is: " << sumOfHashes(words) << std::endl;
+
+    //printWords(words);
 
     return 0;
 }

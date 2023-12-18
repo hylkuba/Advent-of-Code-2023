@@ -161,14 +161,14 @@ void loadRocks(std::map<std::pair<size_t, size_t>, char> &platform,
  * @param platform 
  * @param currPos 
  */
-void moveNorth(std::map<std::pair<size_t, size_t>, char> &platform,
+std::pair<size_t, size_t> moveNorth(std::map<std::pair<size_t, size_t>, char> &platform,
     std::vector<std::pair<size_t, size_t>> &rocks,
-    std::pair<size_t, size_t> currPos) {
+    std::pair<size_t, size_t> startingPos) {
 
-    std::pair<size_t, size_t> oldPos = currPos; 
+    std::pair<size_t, size_t> oldPos = startingPos, currPos; 
     
-    for (size_t y = currPos.second - 1; y > 0; y--){
-        currPos = std::make_pair(currPos.first, y);
+    for (size_t y = startingPos.second - 1; y > 0; y--){
+        currPos = std::make_pair(startingPos.first, y);
         if(platform[currPos] == '.') {
             platform[currPos] = 'O';
             platform[oldPos] = '.';
@@ -177,6 +177,8 @@ void moveNorth(std::map<std::pair<size_t, size_t>, char> &platform,
         }
         oldPos = currPos;
     }
+
+    return oldPos;
 }
 
 /**
@@ -185,14 +187,14 @@ void moveNorth(std::map<std::pair<size_t, size_t>, char> &platform,
  * @param platform 
  * @param currPos 
  */
-void moveWest(std::map<std::pair<size_t, size_t>, char> &platform,
+std::pair<size_t, size_t> moveWest(std::map<std::pair<size_t, size_t>, char> &platform,
     std::vector<std::pair<size_t, size_t>> &rocks,
-    std::pair<size_t, size_t> currPos) {
+    std::pair<size_t, size_t> startingPos) {
 
-    std::pair<size_t, size_t> oldPos = currPos; 
+    std::pair<size_t, size_t> oldPos = startingPos, currPos; 
     
-    for (size_t x = currPos.first - 1; x > 0; x--){
-        currPos = std::make_pair(x, currPos.second);
+    for (size_t x = startingPos.first - 1; x > 0; x--){
+        currPos = std::make_pair(x, startingPos.second);
         if(platform[currPos] == '.') {
             platform[currPos] = 'O';
             platform[oldPos] = '.';
@@ -201,6 +203,8 @@ void moveWest(std::map<std::pair<size_t, size_t>, char> &platform,
         }
         oldPos = currPos;
     }
+
+    return oldPos;
 }
 
 /**
@@ -209,15 +213,15 @@ void moveWest(std::map<std::pair<size_t, size_t>, char> &platform,
  * @param platform 
  * @param currPos 
  */
-void moveSouth(std::map<std::pair<size_t, size_t>, char> &platform,
+std::pair<size_t, size_t> moveSouth(std::map<std::pair<size_t, size_t>, char> &platform,
     std::vector<std::pair<size_t, size_t>> &rocks,
-    std::pair<size_t, size_t> currPos,
+    std::pair<size_t, size_t> startingPos,
     size_t height) {
 
-    std::pair<size_t, size_t> oldPos = currPos; 
+    std::pair<size_t, size_t> oldPos = startingPos, currPos; 
     
-    for (size_t y = currPos.second + 1; y <= height; y++){
-        currPos = std::make_pair(currPos.first, y);
+    for (size_t y = startingPos.second + 1; y <= height; y++){
+        currPos = std::make_pair(startingPos.first, y);
         if(platform[currPos] == '.') {
             platform[currPos] = 'O';
             platform[oldPos] = '.';
@@ -226,6 +230,8 @@ void moveSouth(std::map<std::pair<size_t, size_t>, char> &platform,
         }
         oldPos = currPos;
     }
+
+    return oldPos;
 }
 
 /**
@@ -234,15 +240,15 @@ void moveSouth(std::map<std::pair<size_t, size_t>, char> &platform,
  * @param platform 
  * @param currPos 
  */
-void moveEast(std::map<std::pair<size_t, size_t>, char> &platform,
+std::pair<size_t, size_t> moveEast(std::map<std::pair<size_t, size_t>, char> &platform,
     std::vector<std::pair<size_t, size_t>> &rocks,
-    std::pair<size_t, size_t> currPos,
+    std::pair<size_t, size_t> startingPos,
     size_t width) {
 
-    std::pair<size_t, size_t> oldPos = currPos; 
+    std::pair<size_t, size_t> oldPos = startingPos, currPos; 
     
-    for (size_t x = currPos.first + 1; x <= width; x++){
-        currPos = std::make_pair(x, currPos.second);
+    for (size_t x = startingPos.first + 1; x <= width; x++){
+        currPos = std::make_pair(x, startingPos.second);
         if(platform[currPos] == '.') {
             platform[currPos] = 'O';
             platform[oldPos] = '.';
@@ -251,6 +257,8 @@ void moveEast(std::map<std::pair<size_t, size_t>, char> &platform,
         }
         oldPos = currPos;
     }
+
+    return oldPos;
 }
 
 /**
@@ -265,24 +273,24 @@ void tilt(std::map<std::pair<size_t, size_t>, char> &platform,
     std::vector<std::pair<size_t, size_t>> &rocks,
     size_t dir) {
     
+    std::vector<std::pair<size_t, size_t>> newRocks;
     for(auto rock : rocks) {
         switch(dir) {
             case 1:
-                moveNorth(platform, rocks, rock);
+                newRocks.push_back(moveNorth(platform, rocks, rock));
                 break;
             case 2:
-                moveWest(platform, rocks, rock);
+                newRocks.push_back(moveWest(platform, rocks, rock));
                 break;
             case 3:
-                moveSouth(platform, rocks, rock, dimensions.second);
+                newRocks.push_back(moveSouth(platform, rocks, rock, dimensions.second));
                 break;
             case 4:
-                moveEast(platform, rocks, rock, dimensions.first);
+                newRocks.push_back(moveEast(platform, rocks, rock, dimensions.first));
                 break;
         }
     }
-    rocks.clear();
-    loadRocks(platform, rocks, dimensions);
+    rocks = newRocks;
 }
 
 void spinCycle(std::map<std::pair<size_t, size_t>, char> &platform,
@@ -301,8 +309,6 @@ void spinCycle(std::map<std::pair<size_t, size_t>, char> &platform,
         
         std::sort(rocks.begin(), rocks.end(), sortEast);
         tilt(platform, dimensions, rocks, 4);
-        
-        std::cout << i << std::endl;
     }
 }
 

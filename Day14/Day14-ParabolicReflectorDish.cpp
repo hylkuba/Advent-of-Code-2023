@@ -10,6 +10,8 @@
 
 #define FILE "Day14-input.txt"
 
+#define SPINCOUNT 1000000000
+
 /**
  * @brief Reads file defined as FILE
  * 
@@ -55,7 +57,8 @@ void printMap(std::map<std::pair<size_t, size_t>, char> &platform
  * @return std::pair<size_t, size_t>
  */
 std::pair<size_t, size_t> storePlatform(const std::vector<std::string> &lines,
-    std::map<std::pair<size_t, size_t>, char> &platform) {
+    std::map<std::pair<size_t, size_t>, char> &platform,
+    std::vector<std::pair<size_t, size_t>> &rocks) {
 
     size_t y = 1, width = 0;
     for(const auto &line : lines) {
@@ -64,11 +67,92 @@ std::pair<size_t, size_t> storePlatform(const std::vector<std::string> &lines,
         }
 
         for (size_t x = 0; x < line.length(); x++) {
-            platform[std::make_pair(x + 1, y)] = line[x];
+            std::pair<size_t, size_t> currPos = std::make_pair(x + 1, y);
+
+            platform[currPos] = line[x];
+            if(line[x] == 'O') {
+                rocks.push_back(currPos);
+            }
         }
         y++;
     }
     return std::make_pair(width, y - 1);
+}
+
+/**
+ * @brief Sorts vector from TOP to BOTTOM, LEFT to RIGHT
+ * 
+ * @param lhs 
+ * @param rhs 
+ * @return true 
+ * @return false 
+ */
+bool sortNorth(const std::pair<size_t, size_t>& lhs, const std::pair<size_t, size_t>& rhs) {
+    if (lhs.second != rhs.second) {
+        return lhs.second < rhs.second;
+    }
+    return lhs.first < rhs.first;
+}
+
+/**
+ * @brief Sorts vector from LEFT to RIGHT, TOP to BOTTOM
+ * 
+ * @param lhs 
+ * @param rhs 
+ * @return true 
+ * @return false 
+ */
+bool sortWest(const std::pair<size_t, size_t>& lhs, const std::pair<size_t, size_t>& rhs) {
+    if (lhs.first != rhs.first) {
+        return lhs.first < rhs.first;
+    }
+
+    return lhs.second < rhs.second;
+}
+
+/**
+ * @brief Sorts vector from TOP to BOTTOM, LEFT to RIGHT
+ * 
+ * @param lhs 
+ * @param rhs 
+ * @return true 
+ * @return false 
+ */
+bool sortSouth(const std::pair<size_t, size_t>& lhs, const std::pair<size_t, size_t>& rhs) {
+    if (lhs.second != rhs.second) {
+        return  rhs.second < lhs.second;
+    }
+    return lhs.first < rhs.first;
+}
+
+/**
+ * @brief Sorts vector from LEFT to RIGHT, TOP to BOTTOM
+ * 
+ * @param lhs 
+ * @param rhs 
+ * @return true 
+ * @return false 
+ */
+bool sortEast(const std::pair<size_t, size_t>& lhs, const std::pair<size_t, size_t>& rhs) {
+    if (lhs.first != rhs.first) {
+        return rhs.first < lhs.first;
+    }
+
+    return lhs.second < rhs.second;
+}
+
+void loadRocks(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::vector<std::pair<size_t, size_t>> &rocks,
+    std::pair<size_t, size_t> dimensions) {
+    
+    for (size_t y = 1; y <= dimensions.second; y++) {
+        for (size_t x = 1; x <= dimensions.first; x++) {
+            std::pair<size_t, size_t> currPos = std::make_pair(x, y);
+            if(platform[currPos] == 'O') {
+                rocks.push_back(currPos);
+            }
+        }
+    }
 }
 
 /**
@@ -78,11 +162,87 @@ std::pair<size_t, size_t> storePlatform(const std::vector<std::string> &lines,
  * @param currPos 
  */
 void moveNorth(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::vector<std::pair<size_t, size_t>> &rocks,
     std::pair<size_t, size_t> currPos) {
-    
+
     std::pair<size_t, size_t> oldPos = currPos; 
+    
     for (size_t y = currPos.second - 1; y > 0; y--){
         currPos = std::make_pair(currPos.first, y);
+        if(platform[currPos] == '.') {
+            platform[currPos] = 'O';
+            platform[oldPos] = '.';
+        } else {
+            break;
+        }
+        oldPos = currPos;
+    }
+}
+
+/**
+ * @brief Moves rock left, as far as they can go
+ * 
+ * @param platform 
+ * @param currPos 
+ */
+void moveWest(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::vector<std::pair<size_t, size_t>> &rocks,
+    std::pair<size_t, size_t> currPos) {
+
+    std::pair<size_t, size_t> oldPos = currPos; 
+    
+    for (size_t x = currPos.first - 1; x > 0; x--){
+        currPos = std::make_pair(x, currPos.second);
+        if(platform[currPos] == '.') {
+            platform[currPos] = 'O';
+            platform[oldPos] = '.';
+        } else {
+            break;
+        }
+        oldPos = currPos;
+    }
+}
+
+/**
+ * @brief Moves rock down, as far as it can go
+ * 
+ * @param platform 
+ * @param currPos 
+ */
+void moveSouth(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::vector<std::pair<size_t, size_t>> &rocks,
+    std::pair<size_t, size_t> currPos,
+    size_t height) {
+
+    std::pair<size_t, size_t> oldPos = currPos; 
+    
+    for (size_t y = currPos.second + 1; y <= height; y++){
+        currPos = std::make_pair(currPos.first, y);
+        if(platform[currPos] == '.') {
+            platform[currPos] = 'O';
+            platform[oldPos] = '.';
+        } else {
+            break;
+        }
+        oldPos = currPos;
+    }
+}
+
+/**
+ * @brief Moves rock right, as far as it can go
+ * 
+ * @param platform 
+ * @param currPos 
+ */
+void moveEast(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::vector<std::pair<size_t, size_t>> &rocks,
+    std::pair<size_t, size_t> currPos,
+    size_t width) {
+
+    std::pair<size_t, size_t> oldPos = currPos; 
+    
+    for (size_t x = currPos.first + 1; x <= width; x++){
+        currPos = std::make_pair(x, currPos.second);
         if(platform[currPos] == '.') {
             platform[currPos] = 'O';
             platform[oldPos] = '.';
@@ -100,16 +260,49 @@ void moveNorth(std::map<std::pair<size_t, size_t>, char> &platform,
  * @param platform 
  * @param dimensions 
  */
-void tiltToNorth(std::map<std::pair<size_t, size_t>, char> &platform,
-    std::pair<size_t, size_t> dimensions) {
+void tilt(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::pair<size_t, size_t> dimensions,
+    std::vector<std::pair<size_t, size_t>> &rocks,
+    size_t dir) {
     
-    for (size_t y = 1; y <= dimensions.second; y++) {
-        for (size_t x = 1; x <= dimensions.first; x++) {
-            std::pair<size_t, size_t> currPos = std::make_pair(x, y);
-            if(platform[currPos] == 'O') {
-                moveNorth(platform, currPos);
-            }
+    for(auto rock : rocks) {
+        switch(dir) {
+            case 1:
+                moveNorth(platform, rocks, rock);
+                break;
+            case 2:
+                moveWest(platform, rocks, rock);
+                break;
+            case 3:
+                moveSouth(platform, rocks, rock, dimensions.second);
+                break;
+            case 4:
+                moveEast(platform, rocks, rock, dimensions.first);
+                break;
         }
+    }
+    rocks.clear();
+    loadRocks(platform, rocks, dimensions);
+}
+
+void spinCycle(std::map<std::pair<size_t, size_t>, char> &platform,
+    std::pair<size_t, size_t> dimensions,
+    std::vector<std::pair<size_t, size_t>> &rocks) {
+
+    for (size_t i = 0; i < SPINCOUNT; i++) {
+        std::sort(rocks.begin(), rocks.end(), sortNorth);
+        tilt(platform, dimensions, rocks, 1);
+
+        std::sort(rocks.begin(), rocks.end(), sortWest);
+        tilt(platform, dimensions, rocks, 2);
+        
+        std::sort(rocks.begin(), rocks.end(), sortSouth);
+        tilt(platform, dimensions, rocks, 3);
+        
+        std::sort(rocks.begin(), rocks.end(), sortEast);
+        tilt(platform, dimensions, rocks, 4);
+        
+        std::cout << i << std::endl;
     }
 }
 
@@ -145,17 +338,23 @@ int main(void) {
      * @brief Key is pair (x, y) and value is char
      * 
      */
-    std::map<std::pair<size_t, size_t>, char> platform;
+    std::map<std::pair<size_t, size_t>, char> platform, spinPlatform;
+    std::vector<std::pair<size_t, size_t>> moveablePlatformRocks, moveableSpinPlatformRocks;
 
-    std::pair<size_t, size_t> dimensions = storePlatform(lines, platform);
+    std::pair<size_t, size_t> dimensions = storePlatform(lines, platform, moveablePlatformRocks);
+
+    spinPlatform = platform;
 
     //printMap(platform, dimensions);
 
-    tiltToNorth(platform, dimensions);
+    tilt(platform, dimensions, moveablePlatformRocks, 1);
 
     //printMap(platform, dimensions);
 
     std::cout << "The total load is: " << sumTotalLoad(platform, dimensions) << std::endl;
+
+    spinCycle(spinPlatform, dimensions, moveableSpinPlatformRocks);
+    std::cout << "The total load is: " << sumTotalLoad(spinPlatform, dimensions) << std::endl;
     
     return 0;
 }

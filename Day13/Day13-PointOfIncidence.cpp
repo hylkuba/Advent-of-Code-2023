@@ -28,6 +28,11 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Prints pattern in original format
+ * 
+ * @param patterns 
+ */
 void printPatterns(const std::vector<std::vector<std::vector<char>>> &patterns) {
     for(const auto &pattern : patterns) {
         for(const auto &row : pattern) {
@@ -40,6 +45,12 @@ void printPatterns(const std::vector<std::vector<std::vector<char>>> &patterns) 
     }
 }
 
+/**
+ * @brief Takes vector of lines from file and stores them appropriately to vector of patterns
+ * 
+ * @param lines 
+ * @param patterns 
+ */
 void storeLines(std::vector<std::string> &lines, std::vector<std::vector<std::vector<char>>> &patterns) {
     std::vector<std::vector<char>> currPattern;
     for(const auto &line : lines) {
@@ -57,6 +68,12 @@ void storeLines(std::vector<std::string> &lines, std::vector<std::vector<std::ve
     patterns.push_back(currPattern);
 }
 
+/**
+ * @brief Generates combinations of all possible scenarios in which exactly one smudge happens for parsed pattern
+ * 
+ * @param pattern 
+ * @return std::vector<std::vector<std::vector<char>>> Vector of all generated possibilites
+ */
 std::vector<std::vector<std::vector<char>>> generateCombinations(const std::vector<std::vector<char>> &pattern) {
     std::vector<std::vector<std::vector<char>>> generated;
 
@@ -76,6 +93,16 @@ std::vector<std::vector<std::vector<char>>> generateCombinations(const std::vect
     return generated;
 }
 
+/**
+ * @brief Checks all lines horizontaly if they are reflected
+ * 
+ * @param pattern 
+ * @param start 
+ * @param end 
+ * @param width 
+ * @return true 
+ * @return false 
+ */
 bool checkHorizontalTillEnd(const std::vector<std::vector<char>> &pattern,
     int start, int end, int width) {
     
@@ -94,6 +121,12 @@ bool checkHorizontalTillEnd(const std::vector<std::vector<char>> &pattern,
     return true;
 }
 
+/**
+ * @brief Loops through all horizontal axis and tries to find if there exists a horizontal reflection
+ * 
+ * @param pattern 
+ * @return size_t 
+ */
 size_t horizontalMirror(const std::vector<std::vector<char>> &pattern) {
     size_t result = 0;
     int width = pattern[0].size(), height = pattern.size();
@@ -108,6 +141,16 @@ size_t horizontalMirror(const std::vector<std::vector<char>> &pattern) {
     return 100 * result;
 }
 
+/**
+ * @brief Checks all lines vertically if they are reflected
+ * 
+ * @param pattern 
+ * @param start 
+ * @param end 
+ * @param height 
+ * @return true 
+ * @return false 
+ */
 bool checkVerticalTillEnd(const std::vector<std::vector<char>> &pattern,
     int start, int end, int height) {
     
@@ -126,6 +169,12 @@ bool checkVerticalTillEnd(const std::vector<std::vector<char>> &pattern,
     return true;
 }
 
+/**
+ * @brief Loops through all vertical axis and tries to find if there exists a vertical reflection
+ * 
+ * @param pattern 
+ * @return size_t 
+ */
 size_t verticalMirror(const std::vector<std::vector<char>> &pattern) {
     size_t result = 0;
     int width = pattern[0].size(), height = pattern.size();
@@ -140,6 +189,13 @@ size_t verticalMirror(const std::vector<std::vector<char>> &pattern) {
     return result;
 }
 
+/**
+ * @brief Finds reflection within pattern
+ * 
+ * @param pattern 
+ * @param smudge 
+ * @return size_t 
+ */
 size_t mirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
     size_t result = ULLONG_MAX;
 
@@ -191,6 +247,13 @@ size_t mirror(const std::vector<std::vector<char>> &pattern, bool smudge) {
     return result;
 }
 
+/**
+ * @brief Sums up the values of all reflections
+ * 
+ * @param patterns 
+ * @param smudge 
+ * @return size_t 
+ */
 size_t summarize(const std::vector<std::vector<std::vector<char>>> &patterns, bool smudge) {
     size_t sum = 0;
 

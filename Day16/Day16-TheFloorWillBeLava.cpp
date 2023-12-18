@@ -4,12 +4,16 @@
 #include <vector>
 #include <map>
 
+#include <windows.h>
+
 #define FILE "Day16-input.txt"
 
 #define UP -1
 #define DOWN -2
 #define LEFT -3
 #define RIGHT -4
+#define PIPELINE -5
+#define DASH -6
 
 /**
  * @brief Reads file defined as FILE
@@ -60,7 +64,8 @@ std::pair<size_t, size_t> storeMap(const std::vector<std::string> &lines,
 
 void printBeamPath(std::map<std::pair<size_t, size_t>, int> &beamPath,
     const std::pair<size_t, size_t> &dimensions) {
-
+    
+    std::cout << std::endl;
     for (size_t y = 1; y <= dimensions.second; y++) {
         for (size_t x = 1; x <= dimensions.first; x++) {
             switch(beamPath[std::make_pair(x, y)]) {
@@ -78,6 +83,12 @@ void printBeamPath(std::map<std::pair<size_t, size_t>, int> &beamPath,
                     break;
                 case DOWN:
                     std::cout << 'v';
+                    break;
+                case PIPELINE:
+                    std::cout << "|";
+                    break;
+                case DASH:
+                    std::cout << "-";
                     break;
                 default:
                     std::cout << beamPath[std::make_pair(x, y)];
@@ -106,10 +117,14 @@ void addToBeamPath(std::map<std::pair<size_t, size_t>, int> &beamPath,
             beamPath[beamPos] = LEFT;
         } else if(move.first == 1) {
             beamPath[beamPos] = RIGHT;
+        } else if(move.first == DASH) {
+            beamPath[beamPos] = DASH;
         } else if(move.second == -1) {
             beamPath[beamPos] = UP;
         } else if(move.second == 1) {
             beamPath[beamPos] = DOWN;
+        } else if(move.second == PIPELINE) {
+            beamPath[beamPos] = PIPELINE;
         }
     }
 }
@@ -122,15 +137,19 @@ void moveBeam(std::map<std::pair<size_t, size_t>, char> &layout,
     std::pair<int, int> move,
     size_t &count) {
 
+    std::pair<size_t, size_t> prevPos = beamPos;
+
+    beamPos.first += move.first;
+    beamPos.second += move.second;
+
+    //std::cout << "Pos: " << beamPos.first << ", " << beamPos.second << " Count: " << count << std::endl;
+
     if(    beamPos.first < 1 
         || beamPos.first > dimensions.first
         || beamPos.second < 1
         || beamPos.second > dimensions.second) {
             return;
     }
-
-    beamPos.first += move.first;
-    beamPos.second += move.second;
 
     if(!beam[beamPos]) {
         count++;
@@ -142,7 +161,54 @@ void moveBeam(std::map<std::pair<size_t, size_t>, char> &layout,
             addToBeamPath(beamPath, beamPos, move);
             moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
             break;
-        
+        case '-':
+            if(prevPos.second == beamPos.second) {
+                addToBeamPath(beamPath, beamPos, move);
+                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+            } else {
+                addToBeamPath(beamPath, beamPos, std::make_pair(DASH, move.second));
+                moveBeam(layout, beam, beamPath, beamPos, dimensions, std::make_pair(-1, 0), count);
+                moveBeam(layout, beam, beamPath, beamPos, dimensions, std::make_pair(1, 0), count);
+            }
+            break;
+        case '|':
+            if(prevPos.first == beamPos.first) {
+                addToBeamPath(beamPath, beamPos, move);
+                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+            } else {
+                addToBeamPath(beamPath, beamPos, std::make_pair(move.first, PIPELINE));
+                moveBeam(layout, beam, beamPath, beamPos, dimensions, std::make_pair(0, -1), count);
+                moveBeam(layout, beam, beamPath, beamPos, dimensions, std::make_pair(0, 1), count);
+            }
+            break;
+        case '\\':
+            if(prevPos.first < beamPos.first) {
+                move = std::make_pair(0, 1);
+            } else if(prevPos.first > beamPos.first) {
+                move = std::make_pair(0, -1);
+            } else if(prevPos.second > beamPos.second) {
+                move = std::make_pair(-1, 0);
+            } else if(prevPos.second < beamPos.second) {
+                move = std::make_pair(1, 0);
+            }
+
+            addToBeamPath(beamPath, beamPos, move);
+            moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+            break;
+        case '/':
+            if(prevPos.first < beamPos.first) {
+                move = std::make_pair(0, -1);
+            } else if(prevPos.first > beamPos.first) {
+                move = std::make_pair(0, 1);
+            } else if(prevPos.second > beamPos.second) {
+                move = std::make_pair(1, 0);
+            } else if(prevPos.second < beamPos.second) {
+                move = std::make_pair(-1, 0);
+            }
+
+            addToBeamPath(beamPath, beamPos, move);
+            moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+            break;
     }
 }
 
@@ -171,6 +237,8 @@ size_t energize(std::map<std::pair<size_t, size_t>, char> &layout,
     std::pair<int, int> move = std::make_pair(1, 0);
     moveBeam(layout, beam, beamPath, beamPos, dimensions, move, sum);
 
+    printBeamPath(beamPath, dimensions);
+
     return sum;
 }
 
@@ -184,6 +252,13 @@ int main(void) {
     std::pair<size_t, size_t> dimensions = storeMap(lines, layout);
 
     //printMap(layout, dimensions);
+
+    /*const SIZE_T stackSize = 512 * 1024 * 1024; // 16 MB
+    ULONG ulStackSize = static_cast<ULONG>(stackSize);
+
+    if (!SetThreadStackGuarantee(&ulStackSize)) {
+        std::cerr << "SetThreadStackGuarantee failed, consider increasing stack size manually." << std::endl;
+    }*/
 
     std::cout << "Tiles that end up being energized: " << energize(layout, dimensions) << std::endl;
     

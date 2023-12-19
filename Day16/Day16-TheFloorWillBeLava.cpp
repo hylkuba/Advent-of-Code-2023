@@ -3,11 +3,11 @@
 #include <fstream>
 #include <vector>
 #include <map>
-
-#include <windows.h>
+#include <set>
 
 #define FILE "Day16-input.txt"
 
+#define EMPTY 0
 #define UP -1
 #define DOWN -2
 #define LEFT -3
@@ -136,11 +136,9 @@ void addToBeamPath(
 }
 
 std::pair<int, int> oneStep(
-        std::map<std::pair<int, int>, bool> &beam,
         std::pair<int, int> &beamPos,
         const std::pair<int, int> &dimensions,
-        std::pair<int, int> &move,
-        int &count) {
+        std::pair<int, int> &move) {
 
     std::pair<int, int> prevPos = beamPos;
     beamPos.first += move.first;
@@ -154,33 +152,24 @@ std::pair<int, int> oneStep(
             return std::make_pair(0, 0);
     }
 
-    if(!beam[beamPos]) {
-        count++;
-        beam[beamPos] = true;
-    }
-
     return prevPos;
 }
 
 void moveBeam(
         std::map<std::pair<int, int>, char> &layout,
-        std::map<std::pair<int, int>, bool> &beam,
         std::map<std::pair<int, int>, int> &beamPath,
         std::pair<int, int> &beamPos,
         const std::pair<int, int> &dimensions,
         std::pair<int, int> &move,
-        int &count) {
+        std::set<std::pair<int, int>> &usedSepartions) {
     
     std::pair<int, int> prevPos;
-    
+
     while(true) {
-        prevPos = oneStep(beam, beamPos, dimensions, move, count);
-
-        if(beamPos == std::make_pair(0, 0)) {
-            break;
-        }
-
-        if(count > 500) {
+        prevPos = oneStep(beamPos, dimensions, move);
+        //std::cout << beamPos.first << ", " << beamPos.second << std::endl;
+        
+        if(beamPos == std::make_pair(0, 0) || usedSepartions.find(beamPos) != usedSepartions.end()) {
             break;
         }
 
@@ -190,15 +179,18 @@ void moveBeam(
                 break;
             case '-':
                 if(prevPos.second != beamPos.second) {
+                    usedSepartions.insert(beamPos);
+                    
                     std::pair<int, int> saveBeamPos = beamPos;
 
                     move = std::make_pair(-1, 0);
-                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+                    moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
 
                     move = std::make_pair(1, 0);
                     beamPos = saveBeamPos;
-                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+                    moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
                     beamPos = saveBeamPos;
+
                     addToBeamPath(beamPath, beamPos, std::make_pair(DASH, move.second));
                 } else {
                     addToBeamPath(beamPath, beamPos, move);
@@ -206,15 +198,18 @@ void moveBeam(
                 break;
             case '|':
                 if(prevPos.first != beamPos.first) {
+                    usedSepartions.insert(beamPos);
+                    
                     std::pair<int, int> saveBeamPos = beamPos;
 
                     move = std::make_pair(0, -1);
-                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+                    moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
 
                     move = std::make_pair(0, 1);
                     beamPos = saveBeamPos;
-                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+                    moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
                     beamPos = saveBeamPos;
+
                     addToBeamPath(beamPath, beamPos, std::make_pair(move.first, PIPELINE));
                 } else {
                     addToBeamPath(beamPath, beamPos, move);
@@ -254,30 +249,46 @@ void initializeBeamPath(
 
     for (int y = 1; y <= dimensions.second; y++) {
         for (int x = 1; x <= dimensions.first; x++) {
-            beamPath[std::make_pair(x, y)] = 0;
+            beamPath[std::make_pair(x, y)] = EMPTY;
         }
     }
+}
+
+size_t count(
+        std::map<std::pair<int, int>, int> &beamPath,
+        const std::pair<int, int> dimensions) {
+    
+    size_t sum = 0;
+    for (int y = 1; y <= dimensions.second; y++) {
+        for (int x = 1; x <= dimensions.first; x++) {
+            if(beamPath[std::make_pair(x, y)] != EMPTY) {
+                sum++;
+            }
+        }
+    }
+    return sum;
 }
 
 int energize(
         std::map<std::pair<int, int>, char> &layout,
         const std::pair<int, int> dimensions) {
 
-    std::map<std::pair<int, int>, bool> beam;
     std::map<std::pair<int, int>, int> beamPath;
 
     initializeBeamPath(beamPath, dimensions);
 
-    int sum = 0;
+    // Starting beam Position
     std::pair<int, int> beamPos = std::make_pair(0, 1);
 
     // Movement, (X, Y)
     std::pair<int, int> move = std::make_pair(1, 0);
-    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, sum);
+
+    std::set<std::pair<int, int>> usedSepartions;
+    moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
 
     printBeamPath(beamPath, dimensions);
 
-    return sum;
+    return count(beamPath, dimensions);
 }
 
 int main(void) {

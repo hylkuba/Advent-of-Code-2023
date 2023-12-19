@@ -150,6 +150,7 @@ std::pair<int, int> oneStep(
         || beamPos.first > dimensions.first
         || beamPos.second < 1
         || beamPos.second > dimensions.second) {
+            beamPos = std::make_pair(0, 0);
             return std::make_pair(0, 0);
     }
 
@@ -171,85 +172,79 @@ void moveBeam(
         int &count) {
     
     std::pair<int, int> prevPos;
-    if(beamPos != std::make_pair(0, 0)) {
+    
+    while(true) {
         prevPos = oneStep(beam, beamPos, dimensions, move, count);
-    } else {
-        return;
-    }
 
-    if(count > 200) return;
+        if(beamPos == std::make_pair(0, 0)) {
+            break;
+        }
 
-    switch(layout[beamPos]) {
-        case '.':
-            addToBeamPath(beamPath, beamPos, move);
+        if(count > 500) {
+            break;
+        }
 
-            while(layout[beamPos] == '.') {
+        switch(layout[beamPos]) {
+            case '.':
                 addToBeamPath(beamPath, beamPos, move);
-                prevPos = oneStep(beam, beamPos, dimensions, move, count);
-            }
-            moveBeam(layout, beam, beamPath, prevPos, dimensions, move, count);
+                break;
+            case '-':
+                if(prevPos.second != beamPos.second) {
+                    std::pair<int, int> saveBeamPos = beamPos;
 
-            break;
-        case '-':
-            if(prevPos.second == beamPos.second) {
+                    move = std::make_pair(-1, 0);
+                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+
+                    move = std::make_pair(1, 0);
+                    beamPos = saveBeamPos;
+                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+                    beamPos = saveBeamPos;
+                    addToBeamPath(beamPath, beamPos, std::make_pair(DASH, move.second));
+                } else {
+                    addToBeamPath(beamPath, beamPos, move);
+                }
+                break;
+            case '|':
+                if(prevPos.first != beamPos.first) {
+                    std::pair<int, int> saveBeamPos = beamPos;
+
+                    move = std::make_pair(0, -1);
+                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+
+                    move = std::make_pair(0, 1);
+                    beamPos = saveBeamPos;
+                    moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
+                    beamPos = saveBeamPos;
+                    addToBeamPath(beamPath, beamPos, std::make_pair(move.first, PIPELINE));
+                } else {
+                    addToBeamPath(beamPath, beamPos, move);
+                }
+                break;
+            case '\\':
+                if(prevPos.first < beamPos.first) {
+                    move = std::make_pair(0, 1);
+                } else if(prevPos.first > beamPos.first) {
+                    move = std::make_pair(0, -1);
+                } else if(prevPos.second > beamPos.second) {
+                    move = std::make_pair(-1, 0);
+                } else if(prevPos.second < beamPos.second) {
+                    move = std::make_pair(1, 0);
+                }
                 addToBeamPath(beamPath, beamPos, move);
-                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-            } else {
-                std::pair<int, int> saveBeamPos = beamPos;
-
-                addToBeamPath(beamPath, beamPos, std::make_pair(DASH, move.second));
-                move = std::make_pair(-1, 0);
-                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-
-                move = std::make_pair(1, 0);
-                beamPos = saveBeamPos;
-                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-            }
-            break;
-        case '|':
-            if(prevPos.first == beamPos.first) {
+                break;
+            case '/':
+                if(prevPos.first < beamPos.first) {
+                    move = std::make_pair(0, -1);
+                } else if(prevPos.first > beamPos.first) {
+                    move = std::make_pair(0, 1);
+                } else if(prevPos.second > beamPos.second) {
+                    move = std::make_pair(1, 0);
+                } else if(prevPos.second < beamPos.second) {
+                    move = std::make_pair(-1, 0);
+                }
                 addToBeamPath(beamPath, beamPos, move);
-                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-            } else {
-                std::pair<int, int> saveBeamPos = beamPos;
-
-                addToBeamPath(beamPath, beamPos, std::make_pair(move.first, PIPELINE));
-                move = std::make_pair(0, -1);
-                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-
-                move = std::make_pair(0, 1);
-                beamPos = saveBeamPos;
-                moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-            }
-            break;
-        case '\\':
-            if(prevPos.first < beamPos.first) {
-                move = std::make_pair(0, 1);
-            } else if(prevPos.first > beamPos.first) {
-                move = std::make_pair(0, -1);
-            } else if(prevPos.second > beamPos.second) {
-                move = std::make_pair(-1, 0);
-            } else if(prevPos.second < beamPos.second) {
-                move = std::make_pair(1, 0);
-            }
-
-            addToBeamPath(beamPath, beamPos, move);
-            moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-            break;
-        case '/':
-            if(prevPos.first < beamPos.first) {
-                move = std::make_pair(0, -1);
-            } else if(prevPos.first > beamPos.first) {
-                move = std::make_pair(0, 1);
-            } else if(prevPos.second > beamPos.second) {
-                move = std::make_pair(1, 0);
-            } else if(prevPos.second < beamPos.second) {
-                move = std::make_pair(-1, 0);
-            }
-
-            addToBeamPath(beamPath, beamPos, move);
-            moveBeam(layout, beam, beamPath, beamPos, dimensions, move, count);
-            break;
+                break;
+        }
     }
 }
 

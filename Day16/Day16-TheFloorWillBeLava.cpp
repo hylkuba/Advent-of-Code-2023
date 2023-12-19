@@ -261,26 +261,57 @@ size_t count(
     return sum;
 }
 
-int energize(
+size_t energize(
         std::map<std::pair<int, int>, char> &layout,
-        const std::pair<int, int> dimensions) {
+        const std::pair<int, int> dimensions,
+        std::pair<int, int> startingPos,
+        std::pair<int, int> move) {
 
     std::map<std::pair<int, int>, int> beamPath;
 
     initializeBeamPath(beamPath, dimensions);
 
-    // Starting beam Position
-    std::pair<int, int> beamPos = std::make_pair(0, 1);
-
-    // Movement, (X, Y)
-    std::pair<int, int> move = std::make_pair(1, 0);
-
     std::set<std::pair<int, int>> usedSepartions;
-    moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
+    moveBeam(layout, beamPath, startingPos, dimensions, move, usedSepartions);
 
-    printBeamPath(beamPath, dimensions);
+    //printBeamPath(beamPath, dimensions);
 
     return count(beamPath, dimensions);
+}
+
+size_t findBest(std::map<std::pair<int, int>, char> &layout,
+        const std::pair<int, int> dimensions) {
+
+    size_t sum = 0;
+    for (int x = 1; x <= dimensions.first; x++) {
+        size_t curr = energize(layout, dimensions, std::make_pair(x, 0), std::make_pair(0, 1));
+
+        if(curr > sum) {
+            sum = curr;
+        }
+
+        curr = energize(layout, dimensions, std::make_pair(x, dimensions.second + 1), std::make_pair(0, -1));
+
+        if(curr > sum) {
+            sum = curr;
+        }
+    }
+
+    for (int y = 1; y <= dimensions.second; y++) {
+        size_t curr = energize(layout, dimensions, std::make_pair(0, y), std::make_pair(1, 0));
+
+        if(curr > sum) {
+            sum = curr;
+        }
+
+        curr = energize(layout, dimensions, std::make_pair(dimensions.first + 1, y), std::make_pair(-1, 0));
+
+        if(curr > sum) {
+            sum = curr;
+        }
+    }
+
+    return sum;
 }
 
 int main(void) {
@@ -294,7 +325,10 @@ int main(void) {
 
     //printMap(layout, dimensions);
 
-    std::cout << "Tiles that end up being energized: " << energize(layout, dimensions) << std::endl;
+    std::cout << "Tiles that end up being energized: " << energize(layout, dimensions,
+        std::make_pair(0, 1), std::make_pair(1, 0)) << std::endl;
+
+    std::cout << "Most tiles energized after finding correct start: " << findBest(layout, dimensions) << std::endl;
 
     return 0;
 }

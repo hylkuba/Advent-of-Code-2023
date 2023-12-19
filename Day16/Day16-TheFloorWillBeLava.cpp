@@ -158,9 +158,9 @@ std::pair<int, int> oneStep(
 void moveBeam(
         std::map<std::pair<int, int>, char> &layout,
         std::map<std::pair<int, int>, int> &beamPath,
-        std::pair<int, int> &beamPos,
+        std::pair<int, int> beamPos,
         const std::pair<int, int> &dimensions,
-        std::pair<int, int> &move,
+        std::pair<int, int> move,
         std::set<std::pair<int, int>> &usedSepartions) {
     
     std::pair<int, int> prevPos;
@@ -180,16 +180,12 @@ void moveBeam(
             case '-':
                 if(prevPos.second != beamPos.second) {
                     usedSepartions.insert(beamPos);
-                    
-                    std::pair<int, int> saveBeamPos = beamPos;
 
                     move = std::make_pair(-1, 0);
                     moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
 
                     move = std::make_pair(1, 0);
-                    beamPos = saveBeamPos;
                     moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
-                    beamPos = saveBeamPos;
 
                     addToBeamPath(beamPath, beamPos, std::make_pair(DASH, move.second));
                 } else {
@@ -199,16 +195,12 @@ void moveBeam(
             case '|':
                 if(prevPos.first != beamPos.first) {
                     usedSepartions.insert(beamPos);
-                    
-                    std::pair<int, int> saveBeamPos = beamPos;
 
                     move = std::make_pair(0, -1);
                     moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
 
                     move = std::make_pair(0, 1);
-                    beamPos = saveBeamPos;
                     moveBeam(layout, beamPath, beamPos, dimensions, move, usedSepartions);
-                    beamPos = saveBeamPos;
 
                     addToBeamPath(beamPath, beamPos, std::make_pair(move.first, PIPELINE));
                 } else {

@@ -4,6 +4,9 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <limits>
+#include <queue>
+#include <algorithm>
 
 #define FILE "Day17-input.txt"
 
@@ -49,13 +52,80 @@ std::pair<int, int> storeBlocks(
             width = line.length();
         }
 
-        for (size_t x = 1; x <= line.length(); x++) {
-            blocks[std::make_pair(x, y)] = line[x] - 48;
+        for (size_t x = 0; x < line.length(); x++) {
+            blocks[std::make_pair(x + 1, y)] = line[x] - 48;
         }
         y++;
     }
 
     return std::make_pair(width, y - 1);
+}
+
+int findLowestSumPath(std::map<std::pair<int, int>, int>& blocks, std::pair<int, int> dimensions) {
+    std::queue<std::pair<int, int>> q;
+    std::map<std::pair<int, int>, int> values;
+    std::set<std::pair<int, int>> visited;
+    std::map<std::pair<int, int>, std::pair<int, int>> parents; // Keep track of parents
+
+    // Start from (1, 1)
+    std::pair<int, int> start = std::make_pair(1, 1);
+    q.push(start);
+    values[start] = blocks[start];
+    visited.insert(start);
+
+    // Possible moves: right, down, left, up
+    int dx[] = {1, 0, -1, 0};
+    int dy[] = {0, 1, 0, -1};
+
+    while (!q.empty()) {
+        std::pair<int, int> current = q.front();
+        q.pop();
+
+        // Explore neighbors
+        for (int i = 0; i < 4; ++i) {
+            int nx = current.first + dx[i];
+            int ny = current.second + dy[i];
+
+            // Check if the neighbor is within bounds
+            if (nx >= 1 && nx <= dimensions.first && ny >= 1 && ny <= dimensions.second &&
+                (visited.find(std::make_pair(nx, ny)) == visited.end())) {
+
+                // Calculate the sum of values for the path to this neighbor
+                int sum = values[current] + blocks[std::make_pair(nx, ny)];
+                std::pair<int, int> newPair = std::make_pair(nx, ny);
+
+                // If the neighbor is not visited or the new path has a lower sum
+                if (visited.find(newPair) == visited.end() || sum < values[newPair]) {
+                    q.push(newPair);
+                    values[newPair] = sum;
+                    visited.insert(newPair);
+                    parents[newPair] = current;
+                }
+            }
+        }
+    }
+
+    // Reconstruct the path
+    /*std::pair<int, int> current = dimensions;
+    std::vector<std::pair<int, int>> path;
+
+    while (current != start) {
+        path.push_back(current);
+        current = parents[current];
+    }
+
+    path.push_back(start);
+    std::reverse(path.begin(), path.end());
+
+    // Print the reconstructed path
+    std::cout << "Reconstructed Path: ";
+    for (const auto& point : path) {
+        std::cout << "(" << point.first << ", " << point.second << ") ";
+    }
+    std::cout << std::endl;*/
+
+    // Return the sum at the destination or -1 if no path is found
+    return values.count(dimensions) ? values[dimensions] : -1;
 }
 
 int main(void) {
@@ -67,7 +137,9 @@ int main(void) {
 
     std::pair<int, int> dimensions = storeBlocks(lines, blocks);
 
-    printBlocks(blocks, dimensions);
+    //printBlocks(blocks, dimensions);
+
+    std::cout << "Least heat that can occur is: " << findLowestSumPath(blocks, dimensions) << std::endl;
 
     return 0;
 }

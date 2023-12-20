@@ -152,10 +152,62 @@ std::pair<std::pair<int, int>, std::pair<int, int>> digInMap(
 }
 
 size_t cubicMeters(
-        const std::map<std::pair<int, int>, bool> &mapOfDigs,
+        std::map<std::pair<int, int>, bool> &mapOfDigs,
         std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
     
     size_t sum = 0;
+
+    int firstX = dimensions.first.first - 1, lastX;
+    int prev = false;
+
+    for (int y = dimensions.second.first; y <= dimensions.second.second; y++) {
+        firstX = dimensions.first.first - 1;
+        for (int x = dimensions.first.first; x <= dimensions.first.second; x++) {
+            
+            /*
+                * 2 possibilites:
+                *   - .#...#....
+                *   - .#####.#.. 
+            */
+
+            if(mapOfDigs[std::make_pair(x, y)]) {
+                if(prev) {
+                    lastX = x;
+                    sum++;
+                    mapOfDigs[std::make_pair(x, y)] = true;
+                    continue;
+                }
+                if (!prev && firstX != dimensions.first.first - 1) {
+                    firstX = dimensions.first.first - 1;
+                    sum++;
+                    mapOfDigs[std::make_pair(x, y)] = true;
+                    continue;
+                }
+                
+                firstX = x;
+                prev = true;
+                sum++;
+                mapOfDigs[std::make_pair(x, y)] = true;
+            } else if(!mapOfDigs[std::make_pair(x, y)]) {
+                if(prev && lastX == x - 1) {
+                    firstX = dimensions.first.first - 1;
+                } else if(firstX != dimensions.first.first - 1) {
+                    sum++;
+                    mapOfDigs[std::make_pair(x, y)] = true;
+                }
+                prev = false;
+            }
+        }
+
+        // If it ends on edge
+        if(firstX != dimensions.first.first - 1) {
+            sum += abs(firstX - dimensions.first.second);
+            firstX = dimensions.first.first - 1;
+            for (int i = firstX; i <= dimensions.first.second; i++) {
+                mapOfDigs[std::make_pair(i, y)] = true;
+            } 
+        }
+    }
 
     return sum;
 }
@@ -178,6 +230,7 @@ int main(void) {
     printMap(mapOfDigs, dimensions);
 
     std::cout << "Cubic meters of lava to hold: " << cubicMeters(mapOfDigs, dimensions) << std::endl;
+    printMap(mapOfDigs, dimensions);
 
     return 0;
 }

@@ -30,16 +30,16 @@ void readFile(std::vector<std::string> &lines) {
 }
 
 struct TDig{
-    std::pair<int, int> move;
+    std::pair<long long, long long> move;
     std::string color;
 };
 
 void printMap(
-        std::map<std::pair<int, int>, bool> &mapOfDigs,
-        std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
+        std::map<std::pair<long long, long long>, bool> &mapOfDigs,
+        std::pair<std::pair<long long, long long>, std::pair<long long, long long>> dimensions) {
 
-    for (int y = dimensions.second.second; y >= dimensions.second.first; y--) {
-        for (int x = dimensions.first.first; x <= dimensions.first.second; x++) {
+    for (long long y = dimensions.second.second; y >= dimensions.second.first; y--) {
+        for (long long x = dimensions.first.first; x <= dimensions.first.second; x++) {
             if(mapOfDigs[std::make_pair(x, y)]) {
                 std::cout << "#";
             } else {
@@ -71,16 +71,16 @@ void storeLines(
     
     for(const auto &line : lines) {
         char firstChar;
-        int number;
+        long long number;
 
         std::istringstream iss(line);
         iss >> firstChar >> number;
 
-        std::string restOfString = line.substr(line.find('(', 0));
+        std::string restOfString = line.substr(line.find('#', 1));
 
-        size_t lastSpace = restOfString.find_last_of(' ');
+        size_t lastSpace = restOfString.find_last_of(')');
         if (lastSpace != std::string::npos) {
-            restOfString = restOfString.substr(0, lastSpace) + restOfString.substr(lastSpace + 1, restOfString.length() - lastSpace - 2);
+            restOfString = restOfString.substr(1, lastSpace - 1);
         }
 
         TDig curr;
@@ -104,7 +104,7 @@ void storeLines(
     }
 }
 
-void changeLimit(int curr, int &max, int &min) {
+void changeLimit(long long curr, long long &max, long long &min) {
     if(curr > max) {
         max = curr;
     } else if(curr < min) {
@@ -112,39 +112,39 @@ void changeLimit(int curr, int &max, int &min) {
     }
 }
 
-std::pair<std::pair<int, int>, std::pair<int, int>> digInMap(
+std::pair<std::pair<long long, long long>, std::pair<long long, long long>> digInMap(
         std::vector<TDig> &digs,
-        std::map<std::pair<int, int>, bool> &mapOfDigs,
+        std::map<std::pair<long long, long long>, bool> &mapOfDigs,
         size_t &numOfDigs) {
     
-    std::pair<int, int> currPos = std::make_pair(0, 0);
-    int maxX = 0, maxY = 0, minX = 0, minY = 0;
+    std::pair<long long, long long> currPos = std::make_pair(0, 0);
+    long long maxX = 0, maxY = 0, minX = 0, minY = 0;
 
     for(const auto &dig : digs) {
-        int currX = currPos.first + dig.move.first;
-        int currY = currPos.second + dig.move.second;
+        long long currX = currPos.first + dig.move.first;
+        long long currY = currPos.second + dig.move.second;
 
         // Dig on X or Y axis
         if(currX > currPos.first) {        
-            for (int i = currPos.first + 1; i <= currX; i++) {
+            for (long long i = currPos.first + 1; i <= currX; i++) {
                 numOfDigs++;
                 mapOfDigs[std::make_pair(i, currY)] = true;
             }
             changeLimit(currX, maxX, minX);
         } else if(currX < currPos.first) {
-            for (int i = currPos.first - 1; i >= currX; i--) {
+            for (long long i = currPos.first - 1; i >= currX; i--) {
                 numOfDigs++;
                 mapOfDigs[std::make_pair(i, currY)] = true;
             }
             changeLimit(currX, maxX, minX);
         } else if(currY > currPos.second) {
-            for (int i = currPos.second + 1; i <= currY; i++) {
+            for (long long i = currPos.second + 1; i <= currY; i++) {
                 numOfDigs++;
                 mapOfDigs[std::make_pair(currX, i)] = true;
             }
             changeLimit(currY, maxY, minY);
         } else if(currY < currPos.second) {
-            for (int i = currPos.second - 1; i >= currY; i--) {
+            for (long long i = currPos.second - 1; i >= currY; i--) {
                 numOfDigs++;
                 mapOfDigs[std::make_pair(currX, i)] = true;
             }
@@ -158,64 +158,86 @@ std::pair<std::pair<int, int>, std::pair<int, int>> digInMap(
 }
 
 size_t cubicMeters(
-        std::map<std::pair<int, int>, bool> &mapOfDigs,
-        std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
+        std::map<std::pair<long long, long long>, bool> &mapOfDigs,
+        std::pair<std::pair<long long, long long>, std::pair<long long, long long>> dimensions) {
     
     // Find starting position
-    std::pair<int, int> startPos;
-    for (int y = dimensions.second.first; y <= dimensions.second.second; y++) {
+    std::pair<long long, long long> startPos;
+    for (long long y = dimensions.second.first; y <= dimensions.second.second; y++) {
         bool found = false;
-        for (int x = dimensions.first.first; x <= dimensions.first.second; x++) {
+        for (long long x = dimensions.first.first; x <= dimensions.first.second; x++) {
             if(mapOfDigs[std::make_pair(x, y)] && !mapOfDigs[std::make_pair(x, y + 1)]) {
                 startPos = std::make_pair(x, y + 1);
                 found = true;
                 break;
             }
         }
-
         if(found) {
             break;
         }
     }
 
-    //std::cout << startPos.first << ", " << startPos.second << std::endl;
-
     // START BFS from inside the loop, conditions will be that it cant go outside of borders
-    std::queue<std::pair<int, int>> q;
-    std::map<std::pair<int, int>, bool> visited;
+    std::queue<std::pair<long long, long long>> q;
+    std::map<std::pair<long long, long long>, bool> visited;
 
     q.push(startPos);
     visited[startPos] = true;
-    mapOfDigs[startPos] = true;
+    //mapOfDigs[startPos] = true;
 
     size_t sum = 1;
 
     while (!q.empty()) {
-        std::pair<int, int> currentPos = q.front();
+        std::pair<long long, long long> currentPos = q.front();
         q.pop();
 
-        // Process current position (store or do whatever you need)
-        //std::cout << "Processing position: (" << currentPos.first << ", " << currentPos.second << ")\n";
-
-        // Check and add neighbors
-        std::pair<int, int> neighbors[] = {
-            {currentPos.first - 1, currentPos.second}, // Up
-            {currentPos.first + 1, currentPos.second}, // Down
-            {currentPos.first, currentPos.second - 1}, // Left
-            {currentPos.first, currentPos.second + 1}  // Right
+        std::pair<long long, long long> neighbors[] = {
+            {currentPos.first - 1, currentPos.second}, 
+            {currentPos.first + 1, currentPos.second}, 
+            {currentPos.first, currentPos.second - 1}, 
+            {currentPos.first, currentPos.second + 1}  
         };
 
         for (const auto& neighbor : neighbors) {
             if (!visited[neighbor] && !mapOfDigs[neighbor]) {
                 q.push(neighbor);
                 visited[neighbor] = true;
-                mapOfDigs[neighbor] = true;
+                //mapOfDigs[neighbor] = true;
                 sum++;
             }
         }
     }
 
     return sum;
+}
+
+void convertColorToMoves(std::vector<TDig> &digs) {
+    for(auto &dig : digs) {
+        std::string substring = dig.color.substr(0, 5);
+
+        // Convert the substring to an integer and then to hex
+        std::stringstream ss;
+        ss << std::hex << substring;
+        long long move;
+        ss >> move;
+
+        char dir = dig.color[5];
+        switch (dir)
+        {
+        case '0':
+            dig.move = std::make_pair(move, 0);
+            break;
+        case '1':
+            dig.move = std::make_pair(0, move);
+            break;
+        case '2':
+            dig.move = std::make_pair(-move, 0);
+            break;
+        case '3':
+            dig.move = std::make_pair(0, move);
+            break;
+        }
+    }
 }
 
 int main(void) {
@@ -227,18 +249,20 @@ int main(void) {
 
     storeLines(lines, digs);
 
-    //printDigs(digs);
-
-    std::map<std::pair<int, int>, bool> mapOfDigs;
+    std::map<std::pair<long long, long long>, bool> mapOfDigs;
     size_t numOfDigs = 0;
 
-    std::pair<std::pair<int, int>, std::pair<int, int>> dimensions = digInMap(digs, mapOfDigs, numOfDigs);
-
-    //std::cout << numOfDigs << std::endl;
-    //printMap(mapOfDigs, dimensions);
+    std::pair<std::pair<long long, long long>, std::pair<long long, long long>> dimensions = digInMap(digs, mapOfDigs, numOfDigs);
 
     std::cout << "Cubic meters of lava to hold: " << (cubicMeters(mapOfDigs, dimensions) + numOfDigs) << std::endl;
-    //printMap(mapOfDigs, dimensions);
+    /*mapOfDigs.clear();
+
+    convertColorToMoves(digs);
+
+    dimensions = digInMap(digs, mapOfDigs, numOfDigs);
+
+    std::cout << "Cubic meters of lava to hold after CONVERSION: " << (cubicMeters(mapOfDigs, dimensions) + numOfDigs) << std::endl;
+    */
 
     return 0;
 }

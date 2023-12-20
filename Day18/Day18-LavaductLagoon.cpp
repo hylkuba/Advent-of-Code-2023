@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <queue>
 #include <map>
 #include <algorithm>
 
@@ -37,7 +38,7 @@ void printMap(
         std::map<std::pair<int, int>, bool> &mapOfDigs,
         std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
 
-    for (int y = dimensions.second.first; y <= dimensions.second.second; y++) {
+    for (int y = dimensions.second.second; y >= dimensions.second.first; y--) {
         for (int x = dimensions.first.first; x <= dimensions.first.second; x++) {
             if(mapOfDigs[std::make_pair(x, y)]) {
                 std::cout << "#";
@@ -113,7 +114,8 @@ void changeLimit(int curr, int &max, int &min) {
 
 std::pair<std::pair<int, int>, std::pair<int, int>> digInMap(
         std::vector<TDig> &digs,
-        std::map<std::pair<int, int>, bool> &mapOfDigs) {
+        std::map<std::pair<int, int>, bool> &mapOfDigs,
+        size_t &numOfDigs) {
     
     std::pair<int, int> currPos = std::make_pair(0, 0);
     int maxX = 0, maxY = 0, minX = 0, minY = 0;
@@ -125,21 +127,25 @@ std::pair<std::pair<int, int>, std::pair<int, int>> digInMap(
         // Dig on X or Y axis
         if(currX > currPos.first) {        
             for (int i = currPos.first + 1; i <= currX; i++) {
+                numOfDigs++;
                 mapOfDigs[std::make_pair(i, currY)] = true;
             }
             changeLimit(currX, maxX, minX);
         } else if(currX < currPos.first) {
             for (int i = currPos.first - 1; i >= currX; i--) {
+                numOfDigs++;
                 mapOfDigs[std::make_pair(i, currY)] = true;
             }
             changeLimit(currX, maxX, minX);
         } else if(currY > currPos.second) {
             for (int i = currPos.second + 1; i <= currY; i++) {
+                numOfDigs++;
                 mapOfDigs[std::make_pair(currX, i)] = true;
             }
             changeLimit(currY, maxY, minY);
         } else if(currY < currPos.second) {
             for (int i = currPos.second - 1; i >= currY; i--) {
+                numOfDigs++;
                 mapOfDigs[std::make_pair(currX, i)] = true;
             }
             changeLimit(currY, maxY, minY);
@@ -155,57 +161,57 @@ size_t cubicMeters(
         std::map<std::pair<int, int>, bool> &mapOfDigs,
         std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
     
-    size_t sum = 0;
-
-    int firstX = dimensions.first.first - 1, lastX;
-    int prev = false;
-
+    // Find starting position
+    std::pair<int, int> startPos;
     for (int y = dimensions.second.first; y <= dimensions.second.second; y++) {
-        firstX = dimensions.first.first - 1;
+        bool found = false;
         for (int x = dimensions.first.first; x <= dimensions.first.second; x++) {
-            
-            /*
-                * 2 possibilites:
-                *   - .#...#....
-                *   - .#####.#.. 
-            */
-
-            if(mapOfDigs[std::make_pair(x, y)]) {
-                if(prev) {
-                    lastX = x;
-                    sum++;
-                    mapOfDigs[std::make_pair(x, y)] = true;
-                    continue;
-                }
-                if (!prev && firstX != dimensions.first.first - 1) {
-                    firstX = dimensions.first.first - 1;
-                    sum++;
-                    mapOfDigs[std::make_pair(x, y)] = true;
-                    continue;
-                }
-                
-                firstX = x;
-                prev = true;
-                sum++;
-                mapOfDigs[std::make_pair(x, y)] = true;
-            } else if(!mapOfDigs[std::make_pair(x, y)]) {
-                if(prev && lastX == x - 1) {
-                    firstX = dimensions.first.first - 1;
-                } else if(firstX != dimensions.first.first - 1) {
-                    sum++;
-                    mapOfDigs[std::make_pair(x, y)] = true;
-                }
-                prev = false;
+            if(mapOfDigs[std::make_pair(x, y)] && !mapOfDigs[std::make_pair(x, y + 1)]) {
+                startPos = std::make_pair(x, y + 1);
+                found = true;
+                break;
             }
         }
 
-        // If it ends on edge
-        if(firstX != dimensions.first.first - 1) {
-            sum += abs(firstX - dimensions.first.second);
-            firstX = dimensions.first.first - 1;
-            for (int i = firstX; i <= dimensions.first.second; i++) {
-                mapOfDigs[std::make_pair(i, y)] = true;
-            } 
+        if(found) {
+            break;
+        }
+    }
+
+    //std::cout << startPos.first << ", " << startPos.second << std::endl;
+
+    // START BFS from inside the loop, conditions will be that it cant go outside of borders
+    std::queue<std::pair<int, int>> q;
+    std::map<std::pair<int, int>, bool> visited;
+
+    q.push(startPos);
+    visited[startPos] = true;
+    mapOfDigs[startPos] = true;
+
+    size_t sum = 1;
+
+    while (!q.empty()) {
+        std::pair<int, int> currentPos = q.front();
+        q.pop();
+
+        // Process current position (store or do whatever you need)
+        //std::cout << "Processing position: (" << currentPos.first << ", " << currentPos.second << ")\n";
+
+        // Check and add neighbors
+        std::pair<int, int> neighbors[] = {
+            {currentPos.first - 1, currentPos.second}, // Up
+            {currentPos.first + 1, currentPos.second}, // Down
+            {currentPos.first, currentPos.second - 1}, // Left
+            {currentPos.first, currentPos.second + 1}  // Right
+        };
+
+        for (const auto& neighbor : neighbors) {
+            if (!visited[neighbor] && !mapOfDigs[neighbor]) {
+                q.push(neighbor);
+                visited[neighbor] = true;
+                mapOfDigs[neighbor] = true;
+                sum++;
+            }
         }
     }
 
@@ -224,13 +230,15 @@ int main(void) {
     //printDigs(digs);
 
     std::map<std::pair<int, int>, bool> mapOfDigs;
+    size_t numOfDigs = 0;
 
-    std::pair<std::pair<int, int>, std::pair<int, int>> dimensions = digInMap(digs, mapOfDigs);
+    std::pair<std::pair<int, int>, std::pair<int, int>> dimensions = digInMap(digs, mapOfDigs, numOfDigs);
 
-    printMap(mapOfDigs, dimensions);
+    //std::cout << numOfDigs << std::endl;
+    //printMap(mapOfDigs, dimensions);
 
-    std::cout << "Cubic meters of lava to hold: " << cubicMeters(mapOfDigs, dimensions) << std::endl;
-    printMap(mapOfDigs, dimensions);
+    std::cout << "Cubic meters of lava to hold: " << (cubicMeters(mapOfDigs, dimensions) + numOfDigs) << std::endl;
+    //printMap(mapOfDigs, dimensions);
 
     return 0;
 }

@@ -33,6 +33,22 @@ struct TDig{
     std::string color;
 };
 
+void printMap(
+        std::map<std::pair<int, int>, bool> &mapOfDigs,
+        std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
+
+    for (int y = dimensions.second.first; y <= dimensions.second.second; y++) {
+        for (int x = dimensions.first.first; x <= dimensions.first.second; x++) {
+            if(mapOfDigs[std::make_pair(x, y)]) {
+                std::cout << "#";
+            } else {
+                std::cout << ".";
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
 void printDigs(const std::vector<TDig> &digs) {
     for(const auto &dig : digs) {
         if(dig.move.first > 0) {
@@ -87,6 +103,63 @@ void storeLines(
     }
 }
 
+void changeLimit(int curr, int &max, int &min) {
+    if(curr > max) {
+        max = curr;
+    } else if(curr < min) {
+        min = curr;
+    }
+}
+
+std::pair<std::pair<int, int>, std::pair<int, int>> digInMap(
+        std::vector<TDig> &digs,
+        std::map<std::pair<int, int>, bool> &mapOfDigs) {
+    
+    std::pair<int, int> currPos = std::make_pair(0, 0);
+    int maxX = 0, maxY = 0, minX = 0, minY = 0;
+
+    for(const auto &dig : digs) {
+        int currX = currPos.first + dig.move.first;
+        int currY = currPos.second + dig.move.second;
+
+        // Dig on X or Y axis
+        if(currX > currPos.first) {        
+            for (int i = currPos.first + 1; i <= currX; i++) {
+                mapOfDigs[std::make_pair(i, currY)] = true;
+            }
+            changeLimit(currX, maxX, minX);
+        } else if(currX < currPos.first) {
+            for (int i = currPos.first - 1; i >= currX; i--) {
+                mapOfDigs[std::make_pair(i, currY)] = true;
+            }
+            changeLimit(currX, maxX, minX);
+        } else if(currY > currPos.second) {
+            for (int i = currPos.second + 1; i <= currY; i++) {
+                mapOfDigs[std::make_pair(currX, i)] = true;
+            }
+            changeLimit(currY, maxY, minY);
+        } else if(currY < currPos.second) {
+            for (int i = currPos.second - 1; i >= currY; i--) {
+                mapOfDigs[std::make_pair(currX, i)] = true;
+            }
+            changeLimit(currY, maxY, minY);
+        }
+        currPos.first = currX;
+        currPos.second = currY;
+    }
+
+    return std::make_pair(std::make_pair(minX, maxX), std::make_pair(minY, maxY));
+}
+
+size_t cubicMeters(
+        const std::map<std::pair<int, int>, bool> &mapOfDigs,
+        std::pair<std::pair<int, int>, std::pair<int, int>> dimensions) {
+    
+    size_t sum = 0;
+
+    return sum;
+}
+
 int main(void) {
     std::vector<std::string> lines;
 
@@ -96,9 +169,15 @@ int main(void) {
 
     storeLines(lines, digs);
 
-    printDigs(digs);
+    //printDigs(digs);
 
-    std::pair<int, int> dimensions;
+    std::map<std::pair<int, int>, bool> mapOfDigs;
+
+    std::pair<std::pair<int, int>, std::pair<int, int>> dimensions = digInMap(digs, mapOfDigs);
+
+    printMap(mapOfDigs, dimensions);
+
+    std::cout << "Cubic meters of lava to hold: " << cubicMeters(mapOfDigs, dimensions) << std::endl;
 
     return 0;
 }

@@ -47,21 +47,30 @@ public:
 };
 
 struct TRule {
-    std::string m_name;
+    char m_name;
     char m_sign;
     int m_value;
     std::string posOutcome;
-    std::string negativeOutcome;    // null string if no negative outcome
 
     friend std::ostream& operator<<(std::ostream& os, const TRule& rule) {
-        os << "Name: " << rule.m_name << ", "
-        << "Sign: " << rule.m_sign << ", "
-        << "Value: " << rule.m_value << ", "
-        << "Positive Outcome: " << rule.posOutcome << ", "
-        << "Negative Outcome: " << rule.negativeOutcome;
+        os << "If: " << rule.m_name << rule.m_sign
+        << rule.m_value << " => " << rule.posOutcome;
         return os;
     }
 };
+
+void printRules(std::map<std::string, std::vector<TRule>> &workflows,
+        std::map<std::string, std::string> &negativeOutcome) {
+
+    for(const auto &work : workflows) {
+        std::cout << work.first << std::endl;
+        for(const auto &rule : work.second) {
+            std::cout << rule << std::endl;
+        }
+        std::cout << "Negative: " << negativeOutcome[work.first] << std::endl;
+        std::cout << "-------------------------------------------------------------" << std::endl;
+    }
+}
 
 void printParts(const std::vector<CPart> &parts) {
     for(const auto &part : parts) {
@@ -79,21 +88,21 @@ void storePart(std::string line, std::vector<CPart> &parts) {
 
     while (std::getline(iss, pair, ',')) {
         char keyChar = pair[0];
-        std::string value = pair.substr(pair.find('=') + 1);
+        int value = stoi(pair.substr(pair.find('=') + 1));
 
         switch (keyChar)
         {
         case 'x':
-            x = stoi(value);
+            x = value;
             break;
         case 'm':
-            m = stoi(value);
+            m = value;
             break;
         case 'a':
-            a = stoi(value);
+            a = value;
             break;
         case 's':
-            s = stoi(value);
+            s = value;
             break;
         default:
             break;
@@ -105,14 +114,40 @@ void storePart(std::string line, std::vector<CPart> &parts) {
     parts.push_back(myPart);
 }
 
-void storeWorkflow(std::string line, std::map<std::string, std::vector<TRule>> &workflows) {
-
+void storeWorkflow(
+        std::string line,
+        std::map<std::string, std::vector<TRule>> &workflows,
+        std::map<std::string, std::string> &negativeOutcome) {
+    
+    int firstPos = line.find('{');
+    std::string name = line.substr(0, firstPos);
+    std::string rest = line.substr(firstPos + 1, line.size() - (firstPos + 2));
+    
+    std::istringstream iss(rest);
+    std::string pair;
+    while (std::getline(iss, pair, ',')) {
+        std::string::size_type pos = pair.find(':');
+        
+        // If not found, end loop, store value as negative outcome
+        if(pos == std::string::npos) {
+            negativeOutcome[name] = pair;
+            break;
+        }
+        
+        char keyChar = pair[0];
+        char sign = pair[1];
+        std::string number =  pair.substr(2, pos - 2);
+        int value = stoi(number);
+        std::string positive = pair.substr(pos + 1);
+        workflows[name].push_back({keyChar, sign, value, positive});
+    }
 }
 
 void storeInput(
         std::vector<std::string> &lines,
         std::vector<CPart> &parts,
-        std::map<std::string, std::vector<TRule>> &workflows) {
+        std::map<std::string, std::vector<TRule>> &workflows,
+        std::map<std::string, std::string> &negativeOutcome) {
     
     bool rules = true;
     for(auto &line : lines) {
@@ -122,7 +157,7 @@ void storeInput(
         }
 
         if(rules) {
-            storeWorkflow(line, workflows);
+            storeWorkflow(line, workflows, negativeOutcome);
         } else {
             storePart(line, parts);
         }
@@ -137,9 +172,12 @@ int main(void) {
     std::vector<CPart> parts;
     std::map<std::string, std::vector<TRule>> workflows;
 
-    storeInput(lines, parts, workflows);
+    std::map<std::string, std::string> negativeOutcome;
 
-    printParts(parts);
+    storeInput(lines, parts, workflows, negativeOutcome);
+
+    //printParts(parts);
+    printRules(workflows, negativeOutcome);
 
     return 0;
 }

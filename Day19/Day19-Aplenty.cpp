@@ -40,6 +40,10 @@ public:
         return os;
     }
 
+    int sum() {
+        return m_x + m_a + m_m + m_s;
+    }
+
     int m_x;
     int m_m;
     int m_a;
@@ -164,6 +168,82 @@ void storeInput(
     }
 }
 
+bool followsRule(
+        CPart &part,
+        const TRule &rule) {
+    
+    switch (rule.m_name)
+    {
+    case 'x':
+        if(rule.m_sign == '>' && part.m_x > rule.m_value) {
+            return true;
+        } else if(rule.m_sign == '<' && part.m_x < rule.m_value) {
+            return true;
+        }
+        break;
+    case 'a':
+        if(rule.m_sign == '>' && part.m_a > rule.m_value) {
+            return true;
+        } else if(rule.m_sign == '<' && part.m_a < rule.m_value) {
+            return true;
+        }
+        break;
+    case 'm':
+        if(rule.m_sign == '>' && part.m_m > rule.m_value) {
+            return true;
+        } else if(rule.m_sign == '<' && part.m_m < rule.m_value) {
+            return true;
+        }
+        break;
+    case 's':
+        if(rule.m_sign == '>' && part.m_s > rule.m_value) {
+            return true;
+        } else if(rule.m_sign == '<' && part.m_s < rule.m_value) {
+            return true;
+        }
+        break;
+    }
+    return false;
+}
+
+std::string workflowStep(
+        std::string key,
+        CPart &part,
+        std::map<std::string, std::vector<TRule>> &workflows,
+        std::map<std::string, std::string> &negativeOutcome) {
+    
+    for(const auto &work : workflows[key]) {
+        if(followsRule(part, work)) {
+            return work.posOutcome;
+        }
+    }
+
+    return negativeOutcome[key];    
+}
+
+size_t sumParts(
+        std::vector<CPart> &parts,
+        std::map<std::string, std::vector<TRule>> &workflows,
+        std::map<std::string, std::string> &negativeOutcome) {
+    
+    size_t sum = 0;
+    for(auto &part : parts) {
+        std::string returnVal = workflowStep("in", part, workflows, negativeOutcome);
+        size_t count = 0;
+        while(returnVal != "A" && returnVal != "R") {
+            std::cout << "before: " << returnVal << std::endl;
+            returnVal = workflowStep("in", part, workflows, negativeOutcome);
+            std::cout << "Count: " << count++ << " | " << returnVal << std::endl;
+        }
+
+        if(returnVal == "A") {
+            sum += part.sum();
+        }
+    }
+
+    return sum;
+}
+
 int main(void) {
     std::vector<std::string> lines;
 
@@ -177,7 +257,9 @@ int main(void) {
     storeInput(lines, parts, workflows, negativeOutcome);
 
     //printParts(parts);
-    printRules(workflows, negativeOutcome);
+    //printRules(workflows, negativeOutcome);
+
+    std::cout << "Sum of all positive parts is: " << sumParts(parts, workflows, negativeOutcome) << std::endl;
 
     return 0;
 }

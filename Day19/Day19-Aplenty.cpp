@@ -301,11 +301,8 @@ size_t sumParts(
     size_t sum = 0;
     for(auto &part : parts) {
         std::string returnVal = workflowStep("in", part, workflows, negativeOutcome);
-        size_t count = 0;
         while(returnVal != "A" && returnVal != "R") {
-            //std::cout << "before: " << returnVal << std::endl;
             returnVal = workflowStep(returnVal, part, workflows, negativeOutcome);
-            //std::cout << "Count: " << count++ << " | " << returnVal << std::endl;
         }
 
         if(returnVal == "A") {
@@ -316,22 +313,77 @@ size_t sumParts(
     return sum;
 }
 
+//! SLOW APPROACH, LINEAR, takes a lot of time
+/**
+ * @brief Sums all possible combinations
+ * 
+ * @param workflows 
+ * @param negativeOutcome 
+ * @return size_t 
+ */
+size_t sumAllCombinations(
+        std::map<std::string, std::vector<TRule>> &workflows,
+        std::map<std::string, std::string> &negativeOutcome) {
+    
+    const int MAX = 4000;
+    size_t sum = 0;
+
+    for (int x = 1; x <= MAX; x++) {
+        for (int m = 1; m <= MAX; m++) {
+            for (int a = 1; a <= MAX; a++) {
+                for (int s = 1; s <= MAX; s++) {
+                    CPart tmp{x, m, a, s};
+                    std::string returnVal = workflowStep("in", tmp, workflows, negativeOutcome);
+
+                    while(returnVal != "A" && returnVal != "R") {
+                        returnVal = workflowStep(returnVal, tmp, workflows, negativeOutcome);
+                    }
+
+                    if(returnVal == "A") {
+                        sum += x + m + a + s;
+                    }
+                }
+            }
+        }
+    }
+    return sum;  
+}
+
 int main(void) {
+    /**
+     * @brief Stores lines from file input
+     * 
+     */
     std::vector<std::string> lines;
 
     readFile(lines);
 
+    /**
+     * @brief Vector of parts, containing their values
+     * 
+     */
     std::vector<CPart> parts;
+
+    /**
+     * @brief Map of rules, key is the name of rule,
+     * value is vector of exact conditions
+     * 
+     */
     std::map<std::string, std::vector<TRule>> workflows;
 
+    /**
+     * @brief Map of negative outcomes for specific workflows
+     * If non of the conditions in workflows are true, this holds
+     * the return value
+     * 
+     */
     std::map<std::string, std::string> negativeOutcome;
 
     storeInput(lines, parts, workflows, negativeOutcome);
 
-    //printParts(parts);
-    //printRules(workflows, negativeOutcome);
-
     std::cout << "Sum of all positive parts is: " << sumParts(parts, workflows, negativeOutcome) << std::endl;
+
+    std::cout << "Sum of all combinations is: " << sumAllCombinations(workflows, negativeOutcome) << std::endl;
 
     return 0;
 }

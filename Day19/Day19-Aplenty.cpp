@@ -28,6 +28,10 @@ void readFile(std::vector<std::string> &lines) {
     }
 }
 
+/**
+ * @brief Part class, holds information of all values for current part
+ * 
+ */
 class CPart {
 public:
     CPart(int x, int m, int a, int s) : m_x(x), m_m(m), m_a(a), m_s(s) {}
@@ -50,6 +54,10 @@ public:
     int m_s;
 };
 
+/**
+ * @brief Rule struct that holds important variables
+ * 
+ */
 struct TRule {
     char m_name;
     char m_sign;
@@ -63,7 +71,14 @@ struct TRule {
     }
 };
 
-void printRules(std::map<std::string, std::vector<TRule>> &workflows,
+/**
+ * @brief 
+ * 
+ * @param workflows 
+ * @param negativeOutcome 
+ */
+void printRules(
+        std::map<std::string, std::vector<TRule>> &workflows,
         std::map<std::string, std::string> &negativeOutcome) {
 
     for(const auto &work : workflows) {
@@ -76,13 +91,27 @@ void printRules(std::map<std::string, std::vector<TRule>> &workflows,
     }
 }
 
+/**
+ * @brief Prints vector of parts
+ * 
+ * @param parts 
+ */
 void printParts(const std::vector<CPart> &parts) {
     for(const auto &part : parts) {
         std::cout << part << std::endl;
     }
 }
 
-void storePart(std::string line, std::vector<CPart> &parts) {
+/**
+ * @brief Separates line into parts format
+ * 
+ * @param line 
+ * @param parts 
+ */
+void storePart(
+        std::string line,
+        std::vector<CPart> &parts) {
+    
     line = line.substr(1, line.size() - 2);
 
     std::istringstream iss(line);
@@ -118,6 +147,13 @@ void storePart(std::string line, std::vector<CPart> &parts) {
     parts.push_back(myPart);
 }
 
+/**
+ * @brief Separates line into format of rules
+ * 
+ * @param line 
+ * @param workflows 
+ * @param negativeOutcome 
+ */
 void storeWorkflow(
         std::string line,
         std::map<std::string, std::vector<TRule>> &workflows,
@@ -147,6 +183,15 @@ void storeWorkflow(
     }
 }
 
+/**
+ * @brief Loops through lines. Divides them into parts and workflows.
+ * Calls appropriate functions: storeWorkflow(), storePart()
+ * 
+ * @param lines 
+ * @param parts 
+ * @param workflows 
+ * @param negativeOutcome 
+ */
 void storeInput(
         std::vector<std::string> &lines,
         std::vector<CPart> &parts,
@@ -168,6 +213,14 @@ void storeInput(
     }
 }
 
+/**
+ * @brief Checks whether the current rule (equation) is true
+ * 
+ * @param part 
+ * @param rule 
+ * @return true 
+ * @return false 
+ */
 bool followsRule(
         CPart &part,
         const TRule &rule) {
@@ -206,6 +259,16 @@ bool followsRule(
     return false;
 }
 
+/**
+ * @brief loops through all rules, calls followsRule() to decide, whether
+ * one of the conditions is true, otherwise returns the negativeOutcome
+ * 
+ * @param key 
+ * @param part 
+ * @param workflows 
+ * @param negativeOutcome 
+ * @return std::string 
+ */
 std::string workflowStep(
         std::string key,
         CPart &part,
@@ -221,6 +284,15 @@ std::string workflowStep(
     return negativeOutcome[key];    
 }
 
+/**
+ * @brief Loops through parts, for each part, calls workflowStep(). If the part
+ * is accepted, adds the sum of parts(x,m,a,s) to the final sum
+ * 
+ * @param parts 
+ * @param workflows 
+ * @param negativeOutcome 
+ * @return size_t 
+ */
 size_t sumParts(
         std::vector<CPart> &parts,
         std::map<std::string, std::vector<TRule>> &workflows,

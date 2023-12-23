@@ -231,9 +231,9 @@ size_t sumParts(
         std::string returnVal = workflowStep("in", part, workflows, negativeOutcome);
         size_t count = 0;
         while(returnVal != "A" && returnVal != "R") {
-            std::cout << "before: " << returnVal << std::endl;
-            returnVal = workflowStep("in", part, workflows, negativeOutcome);
-            std::cout << "Count: " << count++ << " | " << returnVal << std::endl;
+            //std::cout << "before: " << returnVal << std::endl;
+            returnVal = workflowStep(returnVal, part, workflows, negativeOutcome);
+            //std::cout << "Count: " << count++ << " | " << returnVal << std::endl;
         }
 
         if(returnVal == "A") {

@@ -8,6 +8,8 @@
 
 #define FILE "Day20-input.txt"
 
+#define BUTTON_PRESS 1000
+
 /**
  * @brief Reads file defined as FILE
  * 
@@ -92,10 +94,23 @@ void printModules(
     }
 }
 
+void printDestinations(
+        const std::map<std::string, std::vector<std::string>> &destinations) {
+
+    for(const auto &pair : destinations) {
+        std::cout << pair.first << " -> ";
+        for(const auto &dest : pair.second) {
+            std::cout << dest << ", ";
+        }
+        std::cout << std::endl;
+    }
+}
+
 void storeModules(
         std::vector<std::string> &lines,
         std::map<std::string, TType> &modules,
-        std::vector<std::string> &broadcaster) {
+        std::vector<std::string> &broadcaster,
+        std::map<std::string, std::vector<std::string>> &destinations) {
 
     for(const auto &line : lines) {
         std::istringstream iss(line);
@@ -117,19 +132,33 @@ void storeModules(
         } else {
             TType tmp;
             tmp.type = currWord[0];
-            tmp.name = currWord.erase(0, 1);
-            modules[tmp.name] = tmp;
+            std::string currName = currWord.erase(0, 1);
+            modules[currName] = tmp;
+
+            // Skip the "->"
+            iss >> currWord;
+
+            // Extract each string value separately into the vector
+            while (iss >> currWord) {
+                // Remove commas from the current word
+                currWord.erase(std::remove_if(currWord.begin(), currWord.end(),
+                    [](char c) { return c == ','; }), currWord.end());
+                
+                destinations[currName].push_back(currWord);
+            }
         }
     }
 }
 
 size_t sumTotal(
-        std::vector<std::string> &lines,
-        std::map<std::string, TType> &modules) {
+        std::map<std::string, TType> &modules,
+        std::map<std::string, std::vector<std::string>> &destinations) {
     
     size_t lowPules = 0, highPulses = 0;
 
-
+    for (size_t i = 0; i < BUTTON_PRESS; i++) {
+        
+    }
 
     return lowPules * highPulses;
 }
@@ -140,14 +169,16 @@ int main(void) {
     readFile(lines);
 
     std::map<std::string, TType> modules;
+    std::map<std::string, std::vector<std::string>> destinations;
 
     std::vector<std::string> broadcaster;
 
-    storeModules(lines, modules, broadcaster);
+    storeModules(lines, modules, broadcaster, destinations);
 
-    printModules(modules);
+    //printModules(modules);
+    printDestinations(destinations);
 
-    std::cout << "Total number of pulses sent: " << sumTotal(lines, modules) << std::endl;
+    std::cout << "Total number of pulses sent: " << sumTotal(modules, destinations) << std::endl;
 
     return 0;
 }

@@ -6,7 +6,7 @@
 #include <map>
 #include <algorithm>
 
-#define FILE "Day19-input.txt"
+#define FILE "Day20-input.txt"
 
 /**
  * @brief Reads file defined as FILE
@@ -69,11 +69,28 @@ struct TType{
     std::string name;
     
     // FLIP FLOP
-    bool status;
+    bool status; // OFF initially
+    // false = OFF, true = ON
 
     // CONJUNCTION
-    bool recentPulse;
+    bool recentPulse; // LOW pulse initially
+    // false = LOW, true = HIGH
 };
+
+void printModules(
+        const std::map<std::string, TType> &modules) {
+    
+    for(const auto &pair : modules) {
+        if(pair.second.type == '%') {
+            std::cout << "Flip-flop: " << pair.first << " | Status: ";
+            std::cout << (pair.second.status ? "ON" : "OFF");
+        } else {
+            std::cout << "Conjunction: " << pair.first << " | Recent pulse: ";
+            std::cout << (pair.second.status ? "HIGH" : "LOW");
+        }
+        std::cout << std::endl;
+    }
+}
 
 void storeModules(
         std::vector<std::string> &lines,
@@ -95,9 +112,13 @@ void storeModules(
                 currWord.erase(std::remove_if(currWord.begin(), currWord.end(),
                     [](char c) { return c == ','; }), currWord.end());
                 
-                // Store the current word in the vector
                 broadcaster.push_back(currWord);
             }
+        } else {
+            TType tmp;
+            tmp.type = currWord[0];
+            tmp.name = currWord.erase(0, 1);
+            modules[tmp.name] = tmp;
         }
     }
 }
@@ -105,7 +126,12 @@ void storeModules(
 size_t sumTotal(
         std::vector<std::string> &lines,
         std::map<std::string, TType> &modules) {
+    
+    size_t lowPules = 0, highPulses = 0;
 
+
+
+    return lowPules * highPulses;
 }
 
 int main(void) {
@@ -119,9 +145,7 @@ int main(void) {
 
     storeModules(lines, modules, broadcaster);
 
-    for(const auto &broad : broadcaster) {
-        std::cout << broad << std::endl;
-    }
+    printModules(modules);
 
     std::cout << "Total number of pulses sent: " << sumTotal(lines, modules) << std::endl;
 

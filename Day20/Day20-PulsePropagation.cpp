@@ -173,7 +173,9 @@ void storeModules(
 std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
         std::map<std::string, TType> &modules,
         std::map<std::string, std::vector<std::string>> &destinations,
-        std::pair<std::pair<std::string, std::string>, bool> &curr) {
+        std::pair<std::pair<std::string, std::string>, bool> &curr,
+        size_t &lowPulses,
+        size_t &highPulses) {
     
     std::vector<std::pair<std::pair<std::string, std::string>, bool>> changes;
 
@@ -186,21 +188,29 @@ std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
         return changes;
     }
 
-    //printChangeOfSignal(curr);
-
     for(const auto &destination : destinations[currModule]) {
         if(modules.count(destination) > 0) {
             if(modules[destination].type == '%') {
                 if(!currSignal) {
                     modules[destination].status = !modules[destination].status;
-                    changes.push_back(std::make_pair(std::make_pair(destination, currModule), modules[destination].status));
+
+                    std::pair<std::pair<std::string, std::string>, bool> newSignal
+                        = std::make_pair(std::make_pair(destination, currModule), modules[destination].status);
+
+                    changes.push_back(newSignal);
+                    printChangeOfSignal(newSignal);
+
+                    modules[destination].status ? highPulses++ : lowPulses++;
                 }
-            } else {
+            } else if(modules[destination].type == '&') {
                 modules[destination].recentPulse = currSignal;
                 if(!currSignal) {
                     modules[destination].low = true;
                 }
+
                 changes.push_back(std::make_pair(std::make_pair(destination, currModule), modules[destination].low));
+                modules[destination].low ? highPulses++ : lowPulses++;
+                printChangeOfSignal(std::make_pair(std::make_pair(destination, currModule), modules[destination].status));
             }
         }
     }
@@ -220,21 +230,25 @@ size_t sumTotal(
         // Queue is current piece and bool is value of signal, FALSE = LOW, true otherwise
         std::queue<std::pair<std::pair<std::string, std::string>, bool>> q;
 
-        // Fill the queue with broadcaster
-        for(auto &broad : broadcaster) {
-            q.push(std::make_pair(std::make_pair(broad, "Broadcaster"), false));
-        }
-
         std::cout << std::endl;
         printChangeOfSignal(std::make_pair(std::make_pair("Broadcaster", "Button"), false));
+        lowPules++;
+
+        // Fill the queue with broadcaster
+        for(auto &broad : broadcaster) {
+            std::pair<std::pair<std::string, std::string>, bool> newSignal
+                = std::make_pair(std::make_pair(broad, "Broadcaster"), false);
+            q.push(newSignal);
+            printChangeOfSignal(newSignal);
+            lowPules++;
+        }
         
         while(!q.empty()) {
             std::pair<std::pair<std::string, std::string>, bool> curr = q.front();
             q.pop();
-            printChangeOfSignal(curr);
             
             std::vector<std::pair<std::pair<std::string, std::string>, bool>> changes
-                = changeSignal(modules, destinations, curr);
+                = changeSignal(modules, destinations, curr, lowPules, highPulses);
             
             if(changes.size() > 0) {
                 for(auto &pair : changes) {

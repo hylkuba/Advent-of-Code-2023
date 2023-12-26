@@ -72,12 +72,13 @@ struct TType{
     std::string name;
     
     // FLIP FLOP
-    bool status; // OFF initially
+    bool status = false; // OFF initially
     // false = OFF, true = ON
 
     // CONJUNCTION
-    bool recentPulse; // LOW pulse initially
-    bool low; // True if all inputs so far were HIGH
+    bool recentPulse = false; // LOW pulse initially
+    bool low = false; // true once LOW pulse is received
+
     // false = LOW, true = HIGH
 };
 
@@ -173,7 +174,7 @@ void storeModules(
 std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
         std::map<std::string, TType> &modules,
         std::map<std::string, std::vector<std::string>> &destinations,
-        std::pair<std::pair<std::string, std::string>, bool> &curr,
+        std::pair<std::pair<std::string, std::string>, bool> curr,
         size_t &lowPulses,
         size_t &highPulses) {
     
@@ -188,29 +189,51 @@ std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
         return changes;
     }
 
+    // ? Check if current module is FLIP FLOP and signal is HIGH
+    if(modules[currModule].type == '%' && currSignal) {
+        return changes;
+    }
+
     for(const auto &destination : destinations[currModule]) {
         if(modules.count(destination) > 0) {
             if(modules[destination].type == '%') {
-                if(!currSignal) {
-                    modules[destination].status = !modules[destination].status;
-
-                    std::pair<std::pair<std::string, std::string>, bool> newSignal
-                        = std::make_pair(std::make_pair(destination, currModule), modules[destination].status);
-
-                    changes.push_back(newSignal);
-                    printChangeOfSignal(newSignal);
-
-                    modules[destination].status ? highPulses++ : lowPulses++;
+                // Switch OFF/ON
+                modules[destination].status = !modules[destination].status;
+                
+                // Set pulse
+                bool pulse = modules[destination].status;
+                if(modules[currModule].type == '&') {
+                    pulse = modules[currModule].low;
                 }
+
+                std::pair<std::pair<std::string, std::string>, bool> newSignal
+                     = std::make_pair(std::make_pair(destination, currModule), pulse);
+
+                changes.push_back(newSignal);
+                printChangeOfSignal(newSignal);
+
+                pulse ? highPulses++ : lowPulses++;
+
             } else if(modules[destination].type == '&') {
+                
+                if(modules[currModule].type == '%') {
+                    currSignal = modules[currModule].status;
+                }
+
                 modules[destination].recentPulse = currSignal;
+                
+                //std::cout << "Currsignal: " << currSignal << " | " << currModule << " | CurrModuleType: " << modules[currModule].type << ", " << destination << std::endl;
+                
                 if(!currSignal) {
                     modules[destination].low = true;
                 }
 
-                changes.push_back(std::make_pair(std::make_pair(destination, currModule), modules[destination].low));
-                modules[destination].low ? highPulses++ : lowPulses++;
-                printChangeOfSignal(std::make_pair(std::make_pair(destination, currModule), modules[destination].status));
+                changes.push_back(std::make_pair(std::make_pair(destination, currModule), !modules[destination].low));
+                currSignal ? highPulses++ : lowPulses++;
+
+                //std::cout << "CurrModule: " << currModule << " | ";
+                //std::cout << "Status of module: " << destination << " is: " << modules[destination].low << std::endl;
+                printChangeOfSignal(std::make_pair(std::make_pair(destination, currModule), !modules[destination].low));
             }
         }
     }

@@ -9,7 +9,7 @@
 
 #define FILE "Day20-input.txt"
 
-#define BUTTON_PRESS 1000
+#define BUTTON_PRESS 1
 
 /**
  * @brief Reads file defined as FILE
@@ -77,6 +77,7 @@ struct TType{
 
     // CONJUNCTION
     bool recentPulse; // LOW pulse initially
+    bool low; // True if all inputs so far were HIGH
     // false = LOW, true = HIGH
 };
 
@@ -105,6 +106,14 @@ void printDestinations(
         }
         std::cout << std::endl;
     }
+}
+
+void printChangeOfSignal(
+        std::pair<std::pair<std::string, std::string>, bool> change) {
+
+    std::cout << change.first.second;
+    std::cout << " -"<< (change.second ? "high" : "low") << "-> " 
+        << change.first.first << std::endl;
 }
 
 void storeModules(
@@ -152,37 +161,46 @@ void storeModules(
 }
 
 /**
- * @brief 
+ * @brief Changes signal for current module, and sends appropriate one
  * 
  * @param modules 
  * @param destinations 
  * @param currModule 
  * @param currSignal 
- * @return std::vector<std::pair<std::string, bool>> FIRST = vector of next modules
- *  where to send signal, SECOND = what signal
+ * @return std::vector<std::pair<std::pair<std::string, std::string>, bool>> 
+ *          * First pair stores string of (Next, Prev), bool value is signal
  */
-std::vector<std::pair<std::string, bool>> changeSignal(
+std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
         std::map<std::string, TType> &modules,
         std::map<std::string, std::vector<std::string>> &destinations,
-        std::string currModule,
-        bool currSignal) {
+        std::pair<std::pair<std::string, std::string>, bool> &curr) {
     
-    std::vector<std::pair<std::string, bool>> changes;
+    std::vector<std::pair<std::pair<std::string, std::string>, bool>> changes;
+
+    std::string currModule = curr.first.first;
+    std::string prevModule = curr.first.second;
+    bool currSignal = curr.second;
 
     // Check if currModule has destinations
     if(destinations.count(currModule) < 1) {
         return changes;
     }
 
+    //printChangeOfSignal(curr);
+
     for(const auto &destination : destinations[currModule]) {
         if(modules.count(destination) > 0) {
             if(modules[destination].type == '%') {
                 if(!currSignal) {
                     modules[destination].status = !modules[destination].status;
-                    changes.push_back(std::make_pair(destination, modules[destination].status));
+                    changes.push_back(std::make_pair(std::make_pair(destination, currModule), modules[destination].status));
                 }
             } else {
-
+                modules[destination].recentPulse = currSignal;
+                if(!currSignal) {
+                    modules[destination].low = true;
+                }
+                changes.push_back(std::make_pair(std::make_pair(destination, currModule), modules[destination].low));
             }
         }
     }
@@ -200,32 +218,29 @@ size_t sumTotal(
     // Repeat BUTTON_PRESS times
     for (size_t i = 0; i < BUTTON_PRESS; i++) {
         // Queue is current piece and bool is value of signal, FALSE = LOW, true otherwise
-        std::queue<std::pair<std::string, bool>> q;
+        std::queue<std::pair<std::pair<std::string, std::string>, bool>> q;
 
         // Fill the queue with broadcaster
         for(auto &broad : broadcaster) {
-            q.push(std::make_pair(broad, false));
+            q.push(std::make_pair(std::make_pair(broad, "Broadcaster"), false));
         }
 
+        std::cout << std::endl;
+        printChangeOfSignal(std::make_pair(std::make_pair("Broadcaster", "Button"), false));
+        
         while(!q.empty()) {
-            std::queue<std::pair<std::string, bool>> newQ;
-
-            // For each element in queue, send signal
-            while(!q.empty()) {
-                std::string curr = q.back().first;
-                bool signal = q.back().second;
-                q.pop();
-
-                std::vector<std::pair<std::string, bool>> changes = changeSignal(modules, destinations, curr, signal);
-
-                if(changes.size() > 0) {
-                    for(const auto &pair : changes) {
-                        newQ.push(pair);
-                    }
+            std::pair<std::pair<std::string, std::string>, bool> curr = q.front();
+            q.pop();
+            printChangeOfSignal(curr);
+            
+            std::vector<std::pair<std::pair<std::string, std::string>, bool>> changes
+                = changeSignal(modules, destinations, curr);
+            
+            if(changes.size() > 0) {
+                for(auto &pair : changes) {
+                    q.push(pair);
                 }
             }
-
-            q = newQ;
         }
     }
 
@@ -245,7 +260,7 @@ int main(void) {
     storeModules(lines, modules, broadcaster, destinations);
 
     //printModules(modules);
-    printDestinations(destinations);
+    //printDestinations(destinations);
 
     std::cout << "Total number of pulses sent: " << sumTotal(broadcaster, modules, destinations) << std::endl;
 

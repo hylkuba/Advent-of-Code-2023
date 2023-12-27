@@ -9,7 +9,7 @@
 
 #define FILE "Day20-input.txt"
 
-#define BUTTON_PRESS 1
+#define BUTTON_PRESS 3
 
 /**
  * @brief Reads file defined as FILE
@@ -91,7 +91,8 @@ void printModules(
             std::cout << (pair.second.status ? "ON" : "OFF");
         } else {
             std::cout << "Conjunction: " << pair.first << " | Recent pulse: ";
-            std::cout << (pair.second.status ? "HIGH" : "LOW");
+            std::cout << (pair.second.recentPulse ? "HIGH" : "LOW")
+                << " Low set: " << (pair.second.low ? "HIGH" : "LOW");
         }
         std::cout << std::endl;
     }
@@ -161,6 +162,16 @@ void storeModules(
     }
 }
 
+void resetLowConjunctions(
+            std::map<std::string, TType> &modules) {
+    
+    for(auto &pair : modules) {
+        if(pair.second.type == '&') {
+            pair.second.low = false;
+        }
+    }
+}
+
 /**
  * @brief Changes signal for current module, and sends appropriate one
  * 
@@ -193,13 +204,15 @@ std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
     if(modules[currModule].type == '%' && currSignal) {
         return changes;
     }
-
+    //std::cout << "Curr Module: " << currModule << std::endl;
     for(const auto &destination : destinations[currModule]) {
         if(modules.count(destination) > 0) {
             if(modules[destination].type == '%') {
                 // Switch OFF/ON
+                //std::cout << modules[destination].name << " status before: " << modules[destination].status << std::endl;
                 modules[destination].status = !modules[destination].status;
-                
+                //std::cout << modules[destination].name << " status after: " << modules[destination].status << std::endl;
+
                 // Set pulse
                 bool pulse = modules[destination].status;
                 if(modules[currModule].type == '&') {
@@ -215,26 +228,33 @@ std::vector<std::pair<std::pair<std::string, std::string>, bool>> changeSignal(
                 pulse ? highPulses++ : lowPulses++;
 
             } else if(modules[destination].type == '&') {
-                
                 if(modules[currModule].type == '%') {
                     currSignal = modules[currModule].status;
+                    //std::cout << "status: " << modules[currModule].status << std::endl;
+                } else if(modules[prevModule].name == "Broadcaster") {
+                    modules[currModule].status = !modules[currModule].status;
                 }
 
                 modules[destination].recentPulse = currSignal;
                 
-                //std::cout << "Currsignal: " << currSignal << " | " << currModule << " | CurrModuleType: " << modules[currModule].type << ", " << destination << std::endl;
-                
                 if(!currSignal) {
                     modules[destination].low = true;
                 }
+                //std::cout << "currsignal: " << currSignal << std::endl;
 
                 changes.push_back(std::make_pair(std::make_pair(destination, currModule), !modules[destination].low));
                 currSignal ? highPulses++ : lowPulses++;
 
-                //std::cout << "CurrModule: " << currModule << " | ";
-                //std::cout << "Status of module: " << destination << " is: " << modules[destination].low << std::endl;
                 printChangeOfSignal(std::make_pair(std::make_pair(destination, currModule), !modules[destination].low));
             }
+        } else {
+            // Destination doesn't exist
+            if(modules[currModule].type == '&') {
+                currSignal = modules[currModule].low;
+            }
+
+            currSignal ? highPulses++ : lowPulses++;
+            printChangeOfSignal(std::make_pair(std::make_pair(destination, currModule), currSignal));
         }
     }
     
@@ -250,17 +270,29 @@ size_t sumTotal(
 
     // Repeat BUTTON_PRESS times
     for (size_t i = 0; i < BUTTON_PRESS; i++) {
+        
+        std::cout << "---------------------------------"<< std::endl;
+        printModules(modules);
+        std::cout << "---------------------------------"<< std::endl;
+        
         // Queue is current piece and bool is value of signal, FALSE = LOW, true otherwise
         std::queue<std::pair<std::pair<std::string, std::string>, bool>> q;
 
-        std::cout << std::endl;
         printChangeOfSignal(std::make_pair(std::make_pair("Broadcaster", "Button"), false));
+
         lowPules++;
 
         // Fill the queue with broadcaster
         for(auto &broad : broadcaster) {
             std::pair<std::pair<std::string, std::string>, bool> newSignal
                 = std::make_pair(std::make_pair(broad, "Broadcaster"), false);
+            if(modules[broad].type == '%') {
+                modules[broad].status = !modules[broad].status;
+            } else if(modules[broad].type == '&') {
+                modules[broad].recentPulse = false;
+                modules[broad].low = true;
+            }
+
             q.push(newSignal);
             printChangeOfSignal(newSignal);
             lowPules++;
@@ -279,7 +311,9 @@ size_t sumTotal(
                 }
             }
         }
+        resetLowConjunctions(modules);
     }
+    std::cout << "Low pulses: " << lowPules << " High pulses: " << highPulses << std::endl;
 
     return lowPules * highPulses;
 }

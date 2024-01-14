@@ -1,3 +1,8 @@
+/**
+ * @author Jakub Hýl <hylkuba@gmail.com>
+ * @date 10.12.2023
+*/
+
 #include <iostream>
 #include <string>
 #include <fstream>
